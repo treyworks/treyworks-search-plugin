@@ -1,0 +1,403 @@
+/* Quick Search Summarizer Styles */
+
+.qss-search-container {
+    max-width: 800px;
+    margin: 2em auto;
+    padding: 1em;
+}
+
+.qss-search-form {
+    margin: 20px 0;
+}
+
+.qss-search-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.qss-search-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.qss-search-input {
+    width: 100%;
+    padding: 10px;
+    padding-right: 35px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 0;
+    height: 100%;
+}
+
+.qss-search-button {
+    padding: 10px 20px;
+    background-color: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+}
+
+.qss-search-button:hover {
+    background-color: #005177;
+}
+
+.qss-clear-button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 20px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    opacity: 0;
+}
+
+.qss-clear-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.qss-clear-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.3);
+}
+
+/* Modal Styles */
+.qss-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+}
+
+.qss-modal.active {
+    display: flex;
+}
+
+.qss-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 0;
+    padding: 20px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.33);
+    overflow-y: auto;
+    transform-style: preserve-3d;
+    opacity: 0;
+    transform: translateZ(600px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.qss-modal.active .qss-modal-content {
+    opacity: 1;
+    transform: translateZ(0);
+    animation: slide-in-bck-center 0.35s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+.qss-modal-content.slide-out-bck-center {
+    animation: slide-out-bck-center 0.35s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+}
+
+.qss-modal.fade-in {
+    animation: fade-in 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+
+.qss-modal.fade-out {
+    animation: fade-out 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+
+.qss-close-modal {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s;
+}
+
+.qss-close-modal:hover {
+    color: #333;
+}
+
+.qss-modal-header {
+    margin-bottom: 20px;
+    padding-right: 40px;
+}
+
+.qss-modal-search {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.qss-modal-search .qss-search-input-wrapper {
+    flex: 1;
+}
+
+.qss-modal-search input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.qss-modal-search button {
+    padding: 10px 20px;
+    background-color: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.qss-modal-search button:hover {
+    background-color: #005177;
+}
+
+/* Results layout */
+.qss-modal-body {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+}
+
+.qss-main-content {
+    padding-right: 20px;
+}
+
+.qss-sidebar {
+    border-left: 1px solid #ddd;
+    padding-left: 20px;
+}
+
+/* Loading indicator */
+.qss-loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.qss-loading::after {
+    content: '';
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes slide-in-bck-center {
+    0% {
+        transform: translateZ(600px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateZ(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-out-bck-center {
+    0% {
+        transform: translateZ(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateZ(600px);
+        opacity: 0;
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    100% {
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+    100% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+}
+
+.slide-in-bck-center {
+    animation: slide-in-bck-center 0.35s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+.slide-out-bck-center {
+    animation: slide-out-bck-center 0.35s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+}
+
+.fade-in {
+    animation: fade-in 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+
+.fade-out {
+    animation: fade-out 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+
+/* Content styles */
+.qss-summary {
+    /* margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px; */
+}
+
+.qss-result-item {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.qss-result-item:last-child {
+    border-bottom: none;
+}
+
+.qss-result-item h4 {
+    margin: 0 0 10px 0;
+}
+
+.qss-result-item a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.qss-result-item a:hover {
+    text-decoration: underline;
+}
+
+.qss-source-item {
+    margin-bottom: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.qss-source-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    background-color: #0073aa;
+    color: white;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0 6px;
+    line-height: 1;
+}
+
+.qss-source-item a {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    flex: 1;
+}
+
+/* Markdown content styles */
+.qss-markdown {
+    line-height: 1.6;
+}
+
+.qss-markdown p {
+    margin-bottom: 1em;
+}
+
+.qss-markdown code {
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.qss-markdown pre {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.qss-markdown pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* Error message */
+.qss-error {
+    color: #dc3232;
+    padding: 10px;
+    background-color: #fdf2f2;
+    border-left: 4px solid #dc3232;
+    margin-bottom: 20px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .qss-modal-body {
+        grid-template-columns: 1fr;
+    }
+
+    .qss-sidebar {
+        border-left: none;
+        border-top: 1px solid #ddd;
+        padding-left: 0;
+        padding-top: 20px;
+    }
+
+    .qss-modal-content {
+        margin: 20px;
+        width: auto;
+    }
+}
