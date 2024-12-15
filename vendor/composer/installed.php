@@ -10,6 +10,15 @@
         'dev' => true,
     ),
     'versions' => array(
+        'clue/stream-filter' => array(
+            'pretty_version' => 'v1.7.0',
+            'version' => '1.7.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../clue/stream-filter',
+            'aliases' => array(),
+            'reference' => '049509fef80032cb3f051595029ab75b49a3c2f7',
+            'dev_requirement' => false,
+        ),
         'google-gemini-php/client' => array(
             'pretty_version' => '1.0.14',
             'version' => '1.0.14.0',
@@ -62,6 +71,15 @@
                 1 => '1.0',
             ),
         ),
+        'php-http/client-common' => array(
+            'pretty_version' => '2.7.2',
+            'version' => '2.7.2.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-http/client-common',
+            'aliases' => array(),
+            'reference' => '0cfe9858ab9d3b213041b947c881d5b19ceeca46',
+            'dev_requirement' => false,
+        ),
         'php-http/client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
@@ -95,6 +113,21 @@
             'aliases' => array(),
             'reference' => '5cad731844891a4c282f3f3e1b582c46839d22f4',
             'dev_requirement' => false,
+        ),
+        'php-http/message' => array(
+            'pretty_version' => '1.16.2',
+            'version' => '1.16.2.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-http/message',
+            'aliases' => array(),
+            'reference' => '06dd5e8562f84e641bf929bfe699ee0f5ce8080a',
+            'dev_requirement' => false,
+        ),
+        'php-http/message-factory-implementation' => array(
+            'dev_requirement' => false,
+            'provided' => array(
+                0 => '1.0',
+            ),
         ),
         'php-http/multipart-stream-builder' => array(
             'pretty_version' => '1.4.2',
@@ -187,6 +220,24 @@
             'install_path' => __DIR__ . '/../symfony/deprecation-contracts',
             'aliases' => array(),
             'reference' => '74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6',
+            'dev_requirement' => false,
+        ),
+        'symfony/options-resolver' => array(
+            'pretty_version' => 'v6.4.16',
+            'version' => '6.4.16.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/options-resolver',
+            'aliases' => array(),
+            'reference' => '368128ad168f20e22c32159b9f761e456cec0c78',
+            'dev_requirement' => false,
+        ),
+        'symfony/polyfill-php80' => array(
+            'pretty_version' => 'v1.31.0',
+            'version' => '1.31.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/polyfill-php80',
+            'aliases' => array(),
+            'reference' => '60328e362d4c2c802a54fcbf04f9d3fb892b4cf8',
             'dev_requirement' => false,
         ),
     ),
