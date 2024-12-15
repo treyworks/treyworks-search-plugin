@@ -30,11 +30,17 @@ class QSS_Plugin_Settings {
      * Enqueue admin scripts
      */
     public function enqueue_admin_scripts($hook) {
-        if ('toplevel_page_qss-plugin-settings' !== $hook) {
+        if ('settings_page_qss-plugin-settings' !== $hook) {
             return;
         }
 
-        wp_enqueue_media();
+        wp_enqueue_script(
+            'qss-admin',
+            QSS_PLUGIN_URL . 'assets/js/admin.js',
+            array('jquery'),
+            QSS_VERSION,
+            true
+        );
     }
 
     /**
@@ -45,15 +51,41 @@ class QSS_Plugin_Settings {
     }
 
     /**
+     * Get Gemini API key from settings
+     */
+    public function get_gemini_key() {
+        return get_option('qss_plugin_gemini_api_key');
+    }
+
+    /**
      * Get settings fields
      */
     private function get_settings_fields() {
         return array(
+            'llm_provider' => array(
+                'label' => __('AI Model Provider', 'qss-plugin'),
+                'type' => 'select',
+                'options' => array(
+                    'openai' => __('OpenAI GPT-4', 'qss-plugin'),
+                    'gemini' => __('Google Gemini', 'qss-plugin')
+                ),
+                'description' => __('Select which AI model provider to use for search and summarization.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'openai'
+            ),
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
                 'type' => 'text',
                 'description' => __('Enter your OpenAI API key to enable AI-powered search functionality.', 'qss-plugin'),
-                'sanitize_callback' => 'sanitize_text_field'
+                'sanitize_callback' => 'sanitize_text_field',
+                'condition' => array('llm_provider', 'openai')
+            ),
+            'gemini_api_key' => array(
+                'label' => __('Google Gemini API Key', 'qss-plugin'),
+                'type' => 'text',
+                'description' => __('Enter your Google Gemini API key.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_text_field',
+                'condition' => array('llm_provider', 'gemini')
             ),
             'enable_logging' => array(
                 'label' => __('Enable Logging', 'qss-plugin'),
@@ -163,7 +195,32 @@ class QSS_Plugin_Settings {
         $field = $args['field'];
         $value = get_option('qss_plugin_' . $key, $field['default'] ?? '');
         
+        // Check if field should be shown based on condition
+        if (!empty($field['condition'])) {
+            list($dependent_field, $dependent_value) = $field['condition'];
+            $current_dependent_value = get_option('qss_plugin_' . $dependent_field);
+            $display_style = $current_dependent_value === $dependent_value ? '' : 'display: none;';
+            printf('<div class="qss-conditional-field" data-depends-on="%s" data-depends-value="%s" style="%s">', 
+                esc_attr($dependent_field), 
+                esc_attr($dependent_value),
+                esc_attr($display_style)
+            );
+        }
+        
         switch ($field['type']) {
+            case 'select':
+                printf('<select id="qss_plugin_%s" name="qss_plugin_%s">', esc_attr($key), esc_attr($key));
+                foreach ($field['options'] as $option_value => $option_label) {
+                    printf(
+                        '<option value="%s" %s>%s</option>',
+                        esc_attr($option_value),
+                        selected($option_value, $value, false),
+                        esc_html($option_label)
+                    );
+                }
+                echo '</select>';
+                break;
+
             case 'checkbox':
                 printf(
                     '<input type="checkbox" id="qss_plugin_%s" name="qss_plugin_%s" value="1" %s />',
@@ -194,6 +251,10 @@ class QSS_Plugin_Settings {
         
         if (!empty($field['description'])) {
             printf('<p class="description">%s</p>', esc_html($field['description']));
+        }
+
+        if (!empty($field['condition'])) {
+            echo '</div>';
         }
     }
 

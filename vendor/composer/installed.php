@@ -1,15 +1,24 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '1.0.0+no-version-set',
+        'pretty_version' => '1.0.0',
         'version' => '1.0.0.0',
-        'type' => 'wordpress-theme',
+        'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'reference' => NULL,
-        'name' => 'intelligent-theme/wordpress-theme',
+        'name' => 'quick-search-summarizer/wordpress-theme',
         'dev' => true,
     ),
     'versions' => array(
+        'google-gemini-php/client' => array(
+            'pretty_version' => '1.0.14',
+            'version' => '1.0.14.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../google-gemini-php/client',
+            'aliases' => array(),
+            'reference' => '11e7413b231dd2ab7ca6169f780d6cc4eeae41a1',
+            'dev_requirement' => false,
+        ),
         'guzzlehttp/guzzle' => array(
             'pretty_version' => '7.9.2',
             'version' => '7.9.2.0',
@@ -35,15 +44,6 @@
             'install_path' => __DIR__ . '/../guzzlehttp/psr7',
             'aliases' => array(),
             'reference' => 'a70f5c95fb43bc83f07c9c948baa0dc1829bf201',
-            'dev_requirement' => false,
-        ),
-        'intelligent-theme/wordpress-theme' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'type' => 'wordpress-theme',
-            'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'reference' => NULL,
             'dev_requirement' => false,
         ),
         'openai-php/client' => array(
@@ -126,8 +126,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-factory' => array(
@@ -142,8 +142,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-message' => array(
@@ -158,9 +158,18 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
+        ),
+        'quick-search-summarizer/wordpress-theme' => array(
+            'pretty_version' => '1.0.0',
+            'version' => '1.0.0.0',
+            'type' => 'wordpress-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'reference' => NULL,
+            'dev_requirement' => false,
         ),
         'ralouphie/getallheaders' => array(
             'pretty_version' => '3.0.3',

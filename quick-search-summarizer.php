@@ -61,6 +61,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             require_once QSS_PLUGIN_DIR . 'includes/class-qss-settings.php';
             require_once QSS_PLUGIN_DIR . 'includes/class-qss-core.php';
             require_once QSS_PLUGIN_DIR . '/includes/class-openai-client.php';
+            require_once QSS_PLUGIN_DIR . '/includes/class-gemini-client.php';
         }
 
         private function init_classes() {
@@ -100,12 +101,123 @@ if (!class_exists('QuickSearchSummarizer')) {
             return $search_results;
         }
 
+        private function get_llm_client() {
+            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+            
+            switch ($llm_provider) {
+                case 'gemini':
+                    $api_key = $this->settings->get_gemini_key();
+                    if (empty($api_key)) {
+                        throw new Exception('Google Gemini API key is not set.');
+                    }
+                    $client = QSS_Gemini_Client::get_instance();
+                    break;
+                    
+                case 'openai':
+                default:
+                    $api_key = $this->settings->get_openai_key();
+                    if (empty($api_key)) {
+                        throw new Exception('OpenAI API key is not set.');
+                    }
+                    $client = QSS_OpenAI_Client::get_instance();
+                    break;
+            }
+            
+            return $client->initialize($api_key);
+        }
+
         /**
-         * Get OpenAI client
+         * Extract search term using LLM
          */
-        private function get_openai_client() {
-            $openai_client = QSS_OpenAI_Client::get_instance();
-            return $openai_client->initialize($this->settings->get_openai_key());
+        private function extract_search_term($query) {
+            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+            $client = $this->get_llm_client();
+            
+            // Get custom prompt or use default
+            $system_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+
+            try {
+                if ($llm_provider === 'gemini') {
+                    $response = $client->geminiFlash()->generateContent(
+                        $system_prompt . '\n User query: ' . $query
+                    );
+                    return $response->text();
+                } else {
+                    $response = $client->chat()->create([
+                        'model' => 'gpt-4',
+                        'messages' => [
+                            [
+                                'role' => 'system',
+                                'content' => $system_prompt
+                            ],
+                            [
+                                'role' => 'user',
+                                'content' => $query
+                            ]
+                        ],
+                        'temperature' => 0.7,
+                        'max_tokens' => 100
+                    ]);
+                    return $response->choices[0]->message->content;
+                }
+            } catch (Exception $e) {
+                error_log('LLM API Error: ' . $e->getMessage());
+                return $query;
+            }
+        }
+
+        /**
+         * Create summary using LLM
+         */
+        private function create_summary($results, $query) {
+            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+            $client = $this->get_llm_client();
+            
+            // Get custom prompt or use default
+            $system_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
+
+            // Format results for the API
+            $formatted_results = array_map(function($result) {
+                return array(
+                    'title' => $result['title'],
+                    'content' => wp_strip_all_tags($result['content']),
+                    'url' => $result['permalink']
+                );
+            }, array_slice($results, 0, 5));
+
+            $input_content = json_encode([
+                'query' => $query,
+                'results' => $formatted_results
+            ]);
+
+            try {
+                if ($llm_provider === 'gemini') {
+                    $response = $client->geminiFlash()->generateContent(
+                        $system_prompt . '\nSearch results:\n' . $input_content
+                    );
+                    return $response->text();
+                } else {
+                    $response = $client->chat()->create([
+                        'model' => 'gpt-4',
+                        'messages' => [
+                            [
+                                'role' => 'system',
+                                'content' => $system_prompt
+                            ],
+                            [
+                                'role' => 'user',
+                                'content' => $input_content
+                            ]
+                        ],
+                        'temperature' => 0.7,
+                        'max_tokens' => 1000
+                    ]);
+                    return $response->choices[0]->message->content;
+                }
+            } catch (Exception $e) {
+                error_log('LLM API Error: ' . $e->getMessage());
+                return '';
+            }
         }
 
         public function register_rest_api_routes() {
@@ -136,12 +248,18 @@ if (!class_exists('QuickSearchSummarizer')) {
             }
 
             // Get settings
-            Plugin_Logger::log(__('* Getting OpenAI API Key'));
-            $openai_key = $this->settings->get_openai_key();
+            Plugin_Logger::log(__('* Getting LLM API Key'));
+            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+            $api_key = '';
+            if ($llm_provider === 'gemini') {
+                $api_key = $this->settings->get_gemini_key();
+            } else {
+                $api_key = $this->settings->get_openai_key();
+            }
             
 
-            if (empty($openai_key)) {
-                return new WP_Error('missing_settings', 'The OpenAI API Key is not set.', ['status' => 400]);
+            if (empty($api_key)) {
+                return new WP_Error('missing_settings', 'The LLM API Key is not set.', ['status' => 400]);
             }
 
             try {
@@ -183,96 +301,16 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         /**
-         * Extract search term using OpenAI
-         */
-        private function extract_search_term($query) {
-            $openai = $this->get_openai_client();
-            
-            // Get custom prompt or use default
-            $default_prompt = 'You are a helpful assistant that extracts search terms from user queries. Your task is to analyze the query and identify the most relevant search terms that would yield useful results when searching a WordPress site. Remove any unnecessary words and focus on the key concepts. For example, if the user asks "Can you help me find articles about WordPress themes?", you should extract "WordPress themes". Respond with ONLY the extracted search terms, nothing else.';
-            $system_prompt = get_option('qss_plugin_extract_search_term_prompt', $default_prompt);
-
-            try {
-                $response = $openai->chat()->create([
-                    'model' => 'gpt-3.5-turbo',
-                    'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => $system_prompt
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => $query
-                        ]
-                    ],
-                    'temperature' => 0.7,
-                    'max_tokens' => 100
-                ]);
-
-                return $response->choices[0]->message->content;
-            } catch (Exception $e) {
-                error_log('OpenAI API Error: ' . $e->getMessage());
-                return $query;
-            }
-        }
-
-        /**
-         * Create summary using OpenAI
-         */
-        private function create_summary($results, $query) {
-            $openai = $this->get_openai_client();
-            
-            // Get custom prompt or use default
-            $default_prompt = 'You are a helpful assistant that creates concise summaries of WordPress content. Your task is to analyze the search results and create a brief, informative summary that captures the key points and helps users quickly understand the available information. Focus on relevance to the search query and highlight the most important details. Keep the summary clear and engaging. Respond with ONLY the summary, no additional text.';
-            $system_prompt = get_option('qss_plugin_create_summary_prompt', $default_prompt);
-
-            // Format results for the API
-            $formatted_results = array_map(function($result) {
-                return array(
-                    'title' => $result['title'],
-                    'content' => wp_strip_all_tags($result['content']),
-                    'url' => $result['permalink']
-                );
-            }, array_slice($results, 0, 5));
-
-            try {
-                $response = $openai->chat()->create([
-                    'model' => 'gpt-4',
-                    'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => $system_prompt
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => json_encode([
-                                'query' => $query,
-                                'results' => $formatted_results
-                            ])
-                        ]
-                    ],
-                    'temperature' => 0.7,
-                    'max_tokens' => 1000
-                ]);
-
-                return $response->choices[0]->message->content;
-            } catch (Exception $e) {
-                error_log('OpenAI API Error: ' . $e->getMessage());
-                return '';
-            }
-        }
-
-        /**
          * Verify nonce
          * Returns a boolean
          */
         public function verify_nonce($request) {
             // Verify nonce
-            // $nonce = $request->get_header('X-WP-Nonce');
-            // if ( !wp_verify_nonce($nonce, 'wp_rest') ) {
-            //     Plugin_Logger::log(__('Invalid nonce ' . $nonce));
-            //     return false;
-            // }
+            $nonce = $request->get_header('X-WP-Nonce');
+            if ( !wp_verify_nonce($nonce, 'wp_rest') ) {
+                Plugin_Logger::log(__('Invalid nonce ' . $nonce));
+                return false;
+            }
 
             return true;
         }
