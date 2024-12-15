@@ -232,7 +232,7 @@ class QSS_Plugin_Settings {
                 
             case 'textarea':
                 printf(
-                    '<textarea class="large-text code" rows="4" id="qss_plugin_%s" name="qss_plugin_%s">%s</textarea>',
+                    '<textarea class="large-text code" rows="8" id="qss_plugin_%s" name="qss_plugin_%s">%s</textarea>',
                     esc_attr($key),
                     esc_attr($key),
                     esc_textarea($value)
