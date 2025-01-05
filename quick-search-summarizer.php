@@ -101,8 +101,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             return $search_results;
         }
 
-        private function get_llm_client() {
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+        private function get_llm_client($llm_provider = 'openai') {
             
             switch ($llm_provider) {
                 case 'gemini':
@@ -129,9 +128,8 @@ if (!class_exists('QuickSearchSummarizer')) {
         /**
          * Extract search term using LLM
          */
-        private function extract_search_term($query) {
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
-            $client = $this->get_llm_client();
+        private function extract_search_term($query, $llm_provider) {
+            $client = $this->get_llm_client($llm_provider);
             
             // Get custom prompt or use default
             $system_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
@@ -169,9 +167,9 @@ if (!class_exists('QuickSearchSummarizer')) {
         /**
          * Create summary using LLM
          */
-        private function create_summary($results, $query) {
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
-            $client = $this->get_llm_client();
+        private function create_summary($results, $query, $llm_provider) {
+
+            $client = $this->get_llm_client($llm_provider);
             
             // Get custom prompt or use default
             $system_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
@@ -248,9 +246,12 @@ if (!class_exists('QuickSearchSummarizer')) {
             }
 
             // Get settings
-            Plugin_Logger::log(__('* Getting LLM API Key'));
             $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
             $api_key = '';
+            
+            Plugin_Logger::log(__('* Getting LLM API Key'));
+            Plugin_Logger::log(__('* LLM Provider: ' . $llm_provider));
+            
             if ($llm_provider === 'gemini') {
                 $api_key = $this->settings->get_gemini_key();
             } else {
@@ -273,7 +274,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                 // Extract search term
                 Plugin_Logger::log(__('* Extracting search term'));
-                $extracted_search_term = $this->extract_search_term($search_query);
+                $extracted_search_term = $this->extract_search_term($search_query, $llm_provider);
 
                 // Perform WordPress search
                 Plugin_Logger::log(__('* Performing WordPress search: ' . $extracted_search_term));
@@ -284,7 +285,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                 Plugin_Logger::log(__('* Creating summary of search results'));
                 // Create summary of search results
-                $summary = $this->create_summary($search_results, $search_query);
+                $summary = $this->create_summary($search_results, $search_query, $llm_provider);
                 Plugin_Logger::log(__('* Summary generated successfully'));
 
                 Plugin_Logger::log(__('* Returning search results'));
