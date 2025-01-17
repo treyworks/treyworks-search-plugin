@@ -11,6 +11,16 @@ jQuery(document).ready(function($) {
     const closeModal = $('.qss-close-modal');
     const clearButtons = $('.qss-clear-button');
 
+    // Check for search query parameter on page load if replace WP search is enabled
+    if (qssConfig.replaceWpSearch) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('s');
+        if (searchParam) {
+            const decodedSearch = decodeURIComponent(searchParam);
+            showSearchModal(decodedSearch);
+        }
+    }
+
     // Configure marked.js
     marked.setOptions({
         breaks: true,
@@ -33,10 +43,8 @@ jQuery(document).ready(function($) {
         modal.addClass('active fade-in');
         $('.qss-modal-content').addClass('slide-in-bck-center');
         
-        // Focus the input after animation
-        setTimeout(() => {
-            modalSearchInput.focus();
-        }, 700);
+        // Focus the input immediately
+        modalSearchInput.focus();
     }
 
     // Handle quick search triggers
@@ -108,11 +116,38 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Escape key to close modal
+    // Keyboard shortcuts
     $(document).on('keydown', function(e) {
+        // Escape key to close modal
         if (e.key === 'Escape' && modal.hasClass('active')) {
             closeModalWithAnimation();
         }
+        // Control+K to open modal
+        if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault(); // Prevent default browser behavior
+            showSearchModal();
+        }
+    });
+
+    // Handle sources toggle
+    $(document).on('click', '.qss-sources-toggle', function() {
+        const isExpanded = $(this).attr('aria-expanded') === 'true';
+        $(this).attr('aria-expanded', !isExpanded);
+        
+        const sourcesList = $('#qss-sources-list');
+        sourcesList.slideToggle(200, function() {
+            if (!isExpanded) {
+                const modalContent = $('.qss-modal-content');
+                const sourcesTop = sourcesList.offset().top;
+                const modalScrollTop = modalContent.scrollTop();
+                const modalTop = modalContent.offset().top;
+                const scrollTo = modalScrollTop + (sourcesTop - modalTop) - 100; // 100px offset for better visibility
+                
+                modalContent.animate({
+                    scrollTop: scrollTo
+                }, 300);
+            }
+        });
     });
 
     function performSearch(query) {
@@ -120,14 +155,15 @@ jQuery(document).ready(function($) {
         loadingIndicator.show();
         searchResults.hide();
         summaryContainer.empty();
-        sourcesList.empty();
+        sourcesList.empty().hide();
+        $('.qss-sources-toggle').attr('aria-expanded', 'false');
 
         // Make API call
         $.ajax({
-            url: qssAjax.rest_url,
+            url: qssConfig.rest_url,
             method: 'POST',
             headers: {
-                'X-WP-Nonce': qssAjax.nonce,
+                'X-WP-Nonce': qssConfig.nonce,
                 'Content-Type': 'application/json'
             },
             data: JSON.stringify({

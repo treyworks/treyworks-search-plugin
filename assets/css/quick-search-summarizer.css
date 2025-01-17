@@ -17,8 +17,9 @@
 }
 
 .qss-search-input-wrapper {
-    position: relative;
     flex: 1;
+    display: flex;
+    align-items: center;
 }
 
 .qss-search-input {
@@ -33,19 +34,27 @@
 }
 
 .qss-search-button {
-    padding: 10px 20px;
+    padding: 0.75rem;
     background-color: #0073aa;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
     transition: background-color 0.3s;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .qss-search-button:hover {
     background-color: #005177;
+}
+
+.qss-search-icon {
+    width: 24px;
+    height: 24px;
 }
 
 .qss-clear-button {
@@ -103,7 +112,7 @@
     position: relative;
     background-color: #fff;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     width: 90%;
     max-width: 1200px;
     max-height: 90vh;
@@ -134,59 +143,59 @@
     animation: fade-out 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
 }
 
+.qss-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    background: #f8f9fa;
+}
+
+.qss-modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: 600;
+}
+
 .qss-close-modal {
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    font-size: 24px;
-    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
     color: #666;
-    transition: color 0.3s;
+    cursor: pointer;
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
 }
 
 .qss-close-modal:hover {
+    background-color: #eee;
     color: #333;
 }
 
-.qss-modal-header {
-    margin-bottom: 20px;
-    padding-right: 40px;
+.qss-modal-search-container {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    background: #fff;
 }
 
 .qss-modal-search {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.qss-modal-search .qss-search-input-wrapper {
-    flex: 1;
-}
-
-.qss-modal-search input {
-    flex: 1;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.qss-modal-search button {
-    padding: 10px 20px;
-    background-color: #0073aa;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.qss-modal-search button:hover {
-    background-color: #005177;
-}
-
-/* Results layout */
 .qss-modal-body {
+    padding: 1rem;
     display: grid;
     grid-template-columns: 1fr 300px;
     gap: 20px;
@@ -205,7 +214,7 @@
 .qss-loading {
     display: none;
     text-align: center;
-    padding: 20px;
+    padding: 1rem;
 }
 
 .qss-loading::after {
@@ -286,10 +295,7 @@
 
 /* Content styles */
 .qss-summary {
-    /* margin-bottom: 30px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 4px; */
+    margin-bottom: 2rem;
 }
 
 .qss-result-item {
@@ -315,34 +321,79 @@
     text-decoration: underline;
 }
 
-.qss-source-item {
-    margin-bottom: 15px;
-    line-height: 1.2;
+.qss-sources-wrapper {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 2rem;
+}
+
+.qss-sources-toggle {
+    width: 100%;
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    transition: background-color 0.2s ease;
+}
+
+.qss-sources-toggle:hover {
+    background-color: #e9ecef;
+}
+
+.qss-chevron {
+    fill: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.qss-sources-toggle[aria-expanded="true"] .qss-chevron {
+    transform: rotate(180deg);
+}
+
+.qss-sources-list {
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+}
+
+.qss-source-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.qss-source-item:last-child {
+    border-bottom: none;
 }
 
 .qss-source-number {
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    background-color: #0073aa;
-    color: white;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 0 6px;
-    line-height: 1;
+    background: #f8f9fa;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    color: #666;
 }
 
 .qss-source-item a {
-    color: #666;
+    color: #0073aa;
     text-decoration: none;
-    font-size: 14px;
     flex: 1;
+}
+
+.qss-source-item a:hover {
+    color: #005177;
+    text-decoration: underline;
 }
 
 /* Markdown content styles */
@@ -385,6 +436,7 @@
 
 /* Responsive styles */
 @media (max-width: 768px) {
+    
     .qss-modal-body {
         grid-template-columns: 1fr;
     }
@@ -400,4 +452,8 @@
         margin: 20px;
         width: auto;
     }
+}
+
+.qss-search-results {
+    padding: 1rem;
 }

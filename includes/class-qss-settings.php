@@ -62,6 +62,20 @@ class QSS_Plugin_Settings {
      */
     private function get_settings_fields() {
         return array(
+            'modal_title' => array(
+                'label' => __('Modal Title', 'qss-plugin'),
+                'type' => 'text',
+                'description' => __('The title displayed at the top of the search modal. Leave empty to use default: "Search the site"', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => __('Search the site', 'qss-plugin')
+            ),
+            'replace_wp_search' => array(
+                'label' => __('Replace WordPress Search', 'qss-plugin'),
+                'type' => 'checkbox',
+                'description' => __('Use Quick Search Summarizer as the primary WordPress search interface. When enabled, the default WordPress search will open the AI-powered search modal.', 'qss-plugin'),
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => false
+            ),
             'llm_provider' => array(
                 'label' => __('AI Model Provider', 'qss-plugin'),
                 'type' => 'select',
