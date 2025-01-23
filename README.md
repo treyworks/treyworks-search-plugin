@@ -29,8 +29,8 @@ Quick Search Summarizer is a powerful WordPress plugin that integrates with AI s
 
 ## Requirements
 
-- WordPress 5.0 or higher
-- PHP 7.4 or higher
+- WordPress 6.6 or higher
+- PHP 8.1 or higher
 - Valid API key for either OpenAI or Google Gemini
 
 ## Support
