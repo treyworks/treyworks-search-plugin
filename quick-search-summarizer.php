@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Quick Search Summarizer
  * Plugin URI: 
- * Description: A WordPress plugin for quick search and summarization
+ * Description: A WordPress plugin for quick search and summarization using AI
  * Version: 1.0.0
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com

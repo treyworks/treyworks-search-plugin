@@ -130,8 +130,8 @@ class QSS_Plugin_Settings {
      */
     public function add_options_page() {
         add_options_page(
-            __('Quick Search Summarizer Settings', 'qss-plugin'),
-            __('Quick Search Summarizer Settings', 'qss-plugin'),
+            __('Quick Search Summarizer', 'qss-plugin'),
+            __('Quick Search Summarizer', 'qss-plugin'),
             'manage_options',
             'qss-plugin-settings',
             array($this, 'render_options_page')
