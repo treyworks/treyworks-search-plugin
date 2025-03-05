@@ -90,14 +90,14 @@ class QSS_Plugin_Settings {
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
                 'type' => 'text',
-                'description' => __('Enter your OpenAI API key to enable AI-powered search functionality.', 'qss-plugin'),
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_openai_api_key" value="' . esc_attr(get_option('qss_plugin_openai_api_key')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button></div>',
                 'sanitize_callback' => 'sanitize_text_field',
                 'condition' => array('llm_provider', 'openai')
             ),
             'gemini_api_key' => array(
                 'label' => __('Google Gemini API Key', 'qss-plugin'),
                 'type' => 'text',
-                'description' => __('Enter your Google Gemini API key.', 'qss-plugin'),
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_gemini_api_key" value="' . esc_attr(get_option('qss_plugin_gemini_api_key')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button></div>',
                 'sanitize_callback' => 'sanitize_text_field',
                 'condition' => array('llm_provider', 'gemini')
             ),
@@ -111,6 +111,7 @@ class QSS_Plugin_Settings {
             'extract_search_term_prompt' => array(
                 'label' => __('Extract Search Term Prompt', 'qss-plugin'),
                 'type' => 'textarea',
+                'rows' => 8,
                 'description' => __('System prompt for extracting search terms from user queries.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_textarea_field',
                 'default' => QSS_Default_Prompts::EXTRACT_SEARCH_TERM
@@ -118,6 +119,7 @@ class QSS_Plugin_Settings {
             'create_summary_prompt' => array(
                 'label' => __('Create Summary Prompt', 'qss-plugin'),
                 'type' => 'textarea',
+                'rows' => 15,
                 'description' => __('System prompt for creating summaries of search results.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_textarea_field',
                 'default' => QSS_Default_Prompts::CREATE_SUMMARY
@@ -245,8 +247,10 @@ class QSS_Plugin_Settings {
                 break;
                 
             case 'textarea':
+                $rows = isset($field['rows']) ? intval($field['rows']) : 5;
                 printf(
-                    '<textarea class="large-text code" rows="8" id="qss_plugin_%s" name="qss_plugin_%s">%s</textarea>',
+                    '<textarea class="large-text" rows="%d" id="qss_plugin_%s" name="qss_plugin_%s">%s</textarea>',
+                    esc_attr($rows),
                     esc_attr($key),
                     esc_attr($key),
                     esc_textarea($value)
@@ -254,16 +258,20 @@ class QSS_Plugin_Settings {
                 break;
             
             default:
-                printf(
-                    '<input type="text" class="regular-text" id="qss_plugin_%s" name="qss_plugin_%s" value="%s" />',
-                    esc_attr($key),
-                    esc_attr($key),
-                    esc_attr($value)
-                );
+                if (strpos($field['description'], '<div class="password-field">') !== false) {
+                    echo $field['description'];
+                } else {
+                    printf(
+                        '<input type="text" class="regular-text" id="qss_plugin_%s" name="qss_plugin_%s" value="%s" />',
+                        esc_attr($key),
+                        esc_attr($key),
+                        esc_attr($value)
+                    );
+                }
                 break;
         }
         
-        if (!empty($field['description'])) {
+        if (!empty($field['description']) && strpos($field['description'], '<div class="password-field">') === false) {
             printf('<p class="description">%s</p>', esc_html($field['description']));
         }
 

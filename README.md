@@ -6,6 +6,17 @@ A WordPress plugin that enhances your site's search functionality by providing A
 
 Quick Search Summarizer is a powerful WordPress plugin that integrates with AI services (OpenAI or Google Gemini) to provide concise, relevant summaries of search results. This helps users quickly find the content they're looking for without having to click through multiple pages.
 
+### How It Works
+
+1. Extracts Optimized Keywords
+The plugin analyzes the user’s search query and identifies the most relevant keywords to refine the search.
+
+2️. Runs WordPress Search
+It performs a search using WordPress’s built-in search functionality to gather the most relevant results.
+
+3️. Generates AI-Powered Summaries
+Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summary that directly answers the user’s question.
+
 ## Features
 
 - AI-powered search result summaries
@@ -46,6 +57,10 @@ This plugin is licensed under the GPL v2 or later.
 Developed by [Clarence Pearson](https://clarencepearson.com) and sponsored by [TreyWorks LLC](https://treyworks.com).
 
 ## Changelog
+
+### 1.0.1
+- Mask API key input for added security
+- Only focus chat modal input on large devices
 
 ### 1.0.0
 - Initial release

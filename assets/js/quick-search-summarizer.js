@@ -44,7 +44,9 @@ jQuery(document).ready(function($) {
         $('.qss-modal-content').addClass('slide-in-bck-center');
         
         // Focus the input immediately
-        modalSearchInput.focus();
+        if (window.matchMedia("(min-width: 768px)").matches) {
+            modalSearchInput.focus();
+        }
     }
 
     // Handle quick search triggers

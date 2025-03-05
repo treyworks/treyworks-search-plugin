@@ -17,4 +17,17 @@ jQuery(document).ready(function($) {
     // Update fields on load and when provider changes
     $('#qss_plugin_llm_provider').on('change', updateConditionalFields);
     updateConditionalFields();
+
+    // Handle reveal button functionality
+    $('.qss-reveal-api-key').on('click', function() {
+        var inputField = $(this).siblings('.qss-api-key-field');
+        var inputType = inputField.attr('type');
+        if (inputType === 'password') {
+            inputField.attr('type', 'text');
+            $(this).text('Hide');
+        } else {
+            inputField.attr('type', 'password');
+            $(this).text('Reveal');
+        }
+    });
 });
