@@ -3,7 +3,7 @@
  * Plugin Name: Quick Search Summarizer
  * Plugin URI: 
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -78,7 +78,7 @@ if (!class_exists('QuickSearchSummarizer')) {
         private function search_site($search_term) {
             $args = array(
                 's' => $search_term,
-                'post_type' => 'any',
+                'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
                 'post_status' => 'publish',
                 'posts_per_page' => -1,
             );
@@ -87,13 +87,22 @@ if (!class_exists('QuickSearchSummarizer')) {
             $search_results = array();
 
             if ($search_query->have_posts()) {
+                $result_count = 0;
                 while ($search_query->have_posts()) {
                     $search_query->the_post();
-                    $search_results[] = array(
-                        'title' => get_the_title(),
-                        'content' => get_the_content(),
-                        'permalink' => get_permalink()
-                    );
+                    if ($result_count < 5) {
+                        $search_results[] = array(
+                            'title' => get_the_title(),
+                            'content' => wp_strip_all_tags(get_the_content()),
+                            'permalink' => get_permalink()
+                        );
+                    } else {
+                        $search_results[] = array(
+                            'title' => get_the_title(),
+                            'permalink' => get_permalink()
+                        );
+                    }
+                    $result_count++;
                 }
             }
 
@@ -277,11 +286,11 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $extracted_search_term = $this->extract_search_term($search_query, $llm_provider);
 
                 // Perform WordPress search
-                Plugin_Logger::log(__('* Performing WordPress search: ' . $extracted_search_term));
+                // Plugin_Logger::log(__('* Performing WordPress search: ' . $extracted_search_term));
 
                 $search_results = $this->search_site($extracted_search_term);
                 
-                // Plugin_Logger::log(__('* Search results: ' . json_encode($search_results)));
+                Plugin_Logger::log(__('* Search results: ' . json_encode($search_results)));
 
                 Plugin_Logger::log(__('* Creating summary of search results'));
                 // Create summary of search results
