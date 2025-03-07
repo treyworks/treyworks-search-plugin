@@ -58,6 +58,11 @@ Developed by [Clarence Pearson](https://clarencepearson.com) and sponsored by [T
 
 ## Changelog
 
+### 1.0.2
+- Added search input placeholder setting
+- Code refactoring
+- Added support for post types in search results
+
 ### 1.0.1
 - Mask API key input for added security
 - Only focus chat modal input on large devices
