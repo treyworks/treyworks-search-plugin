@@ -69,12 +69,34 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => __('Search the site', 'qss-plugin')
             ),
+            'search_input_placeholder' => array(
+                'label' => __('Search Input Placeholder', 'qss-plugin'),
+                'type' => 'text',
+                'description' => __('The placeholder text for the search input field.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => __('Refine your search...', 'qss-plugin')
+            ),
             'replace_wp_search' => array(
                 'label' => __('Replace WordPress Search', 'qss-plugin'),
                 'type' => 'checkbox',
                 'description' => __('Use Quick Search Summarizer as the primary WordPress search interface. When enabled, the default WordPress search will open the AI-powered search modal.', 'qss-plugin'),
                 'sanitize_callback' => 'rest_sanitize_boolean',
                 'default' => false
+            ),
+            'enable_logging' => array(
+                'label' => __('Enable Logging', 'qss-plugin'),
+                'type' => 'checkbox',
+                'description' => __('Enable debug logging for troubleshooting purposes.', 'qss-plugin'),
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => false
+            ),
+            'searchable_post_types' => array(
+                'label' => __('Searchable Post Types', 'qss-plugin'),
+                'type' => 'checkboxes',
+                'options' => $this->get_post_types(),
+                'description' => __('Select the post types to include in the search query.', 'qss-plugin'),
+                'sanitize_callback' => array($this, 'sanitize_post_types'),
+                'default' => array('post', 'page')
             ),
             'llm_provider' => array(
                 'label' => __('AI Model Provider', 'qss-plugin'),
@@ -101,13 +123,6 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'condition' => array('llm_provider', 'gemini')
             ),
-            'enable_logging' => array(
-                'label' => __('Enable Logging', 'qss-plugin'),
-                'type' => 'checkbox',
-                'description' => __('Enable debug logging for troubleshooting purposes.', 'qss-plugin'),
-                'sanitize_callback' => 'rest_sanitize_boolean',
-                'default' => false
-            ),
             'extract_search_term_prompt' => array(
                 'label' => __('Extract Search Term Prompt', 'qss-plugin'),
                 'type' => 'textarea',
@@ -125,6 +140,34 @@ class QSS_Plugin_Settings {
                 'default' => QSS_Default_Prompts::CREATE_SUMMARY
             )
         );
+    }
+
+    /**
+     * Get all registered post types
+     */
+    private function get_post_types() {
+        $post_types = get_post_types(array('public' => true), 'objects');
+        $options = array();
+        foreach ($post_types as $post_type) {
+            $options[$post_type->name] = $post_type->label;
+        }
+        return $options;
+    }
+
+    /**
+     * Sanitize post types
+     */
+    public function sanitize_post_types( $values ) {
+        $valid_post_types = array_keys( $this->get_post_types() );
+        $sanitized_values = array();
+
+        foreach ( $valid_post_types as $post_type ) {
+            if ( isset( $values[ $post_type ] ) && $values[ $post_type ] === '1' ) {
+                $sanitized_values[] = sanitize_text_field( $post_type );
+            }
+        }
+
+        return $sanitized_values;
     }
 
     /**
@@ -157,9 +200,25 @@ class QSS_Plugin_Settings {
 
         // API Settings Section
         add_settings_section(
-            'qss_plugin_settings_section',
+            'qss_plugin_api_section',
             __('API Settings', 'qss-plugin'),
-            array($this, 'settings_section_callback'),
+            function() { echo '<p>' . __('Configure API keys and select AI provider.', 'qss-plugin') . '</p>'; },
+            'qss-plugin-settings'
+        );
+
+        // General Settings Section
+        add_settings_section(
+            'qss_plugin_general_section',
+            __('General Settings', 'qss-plugin'),
+            function() { echo '<p>' . __('General plugin settings.', 'qss-plugin') . '</p>'; },
+            'qss-plugin-settings'
+        );
+
+        // Search Settings Section
+        add_settings_section(
+            'qss_plugin_search_section',
+            __('Search Settings', 'qss-plugin'),
+            function() { echo '<p>' . __('Configure search behavior.', 'qss-plugin') . '</p>'; },
             'qss-plugin-settings'
         );
 
@@ -167,14 +226,24 @@ class QSS_Plugin_Settings {
         add_settings_section(
             'qss_plugin_prompts_section',
             __('System Prompts', 'qss-plugin'),
-            array($this, 'prompts_section_callback'),
+            function() { echo '<p>' . __('Customize system prompts for search and summarization.', 'qss-plugin') . '</p>'; },
             'qss-plugin-settings'
         );
 
         // Add fields
         foreach ($this->get_settings_fields() as $key => $field) {
-            $section = strpos($key, 'prompt') !== false ? 'qss_plugin_prompts_section' : 'qss_plugin_settings_section';
-            
+            if (in_array($key, ['modal_title', 'replace_wp_search', 'enable_logging', 'search_input_placeholder'])) {
+                $section = 'qss_plugin_general_section';
+            } elseif ($key === 'searchable_post_types') {
+                $section = 'qss_plugin_search_section';
+            } elseif (in_array($key, ['llm_provider', 'openai_api_key', 'gemini_api_key'])) {
+                $section = 'qss_plugin_api_section';
+            } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt'])) {
+                $section = 'qss_plugin_prompts_section';
+            } else {
+                $section = 'qss_plugin_settings_section';
+            }
+
             add_settings_field(
                 'qss_plugin_' . $key,
                 $field['label'],
@@ -201,6 +270,13 @@ class QSS_Plugin_Settings {
      */
     public function prompts_section_callback() {
         echo '<p>' . __('Configure the system prompts used for AI operations. Leave blank to use defaults.', 'qss-plugin') . '</p>';
+    }
+
+    /**
+     * Post types section callback
+     */
+    public function post_types_section_callback() {
+        echo '<p>' . __('Select the post types to include in the search query.', 'qss-plugin') . '</p>';
     }
 
     /**
@@ -256,6 +332,34 @@ class QSS_Plugin_Settings {
                     esc_textarea($value)
                 );
                 break;
+
+            case 'multiselect':
+                printf('<select id="qss_plugin_%s" name="qss_plugin_%s[]" multiple>', esc_attr($key), esc_attr($key));
+                foreach ($field['options'] as $option_value => $option_label) {
+                    printf(
+                        '<option value="%s" %s>%s</option>',
+                        esc_attr($option_value),
+                        in_array($option_value, $value) ? 'selected' : '',
+                        esc_html($option_label)
+                    );
+                }
+                echo '</select>';
+                break;
+
+            case 'checkboxes':
+                echo '<div class="qss-checkbox-group">';
+                foreach ($field['options'] as $option_value => $option_label) {
+                    $checked = in_array($option_value, (array)$value) ? 'checked' : '';
+                    printf(
+                        '<label><input type="checkbox" name="qss_plugin_%s[%s]" value="1" %s> %s</label><br/>',
+                        esc_attr($key),
+                        esc_attr($option_value),
+                        $checked,
+                        esc_html($option_label)
+                    );
+                }
+                echo '</div>';
+                break;
             
             default:
                 if (strpos($field['description'], '<div class="password-field">') !== false) {
@@ -302,30 +406,6 @@ class QSS_Plugin_Settings {
         }
 
         settings_errors('qss_plugin_messages');
-        ?>
-        <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-            
-            <!-- Settings Form -->
-            <form action="options.php" method="post">
-                <?php
-                settings_fields('qss_plugin_settings');
-                do_settings_sections('qss-plugin-settings');
-                submit_button('Save Settings');
-                ?>
-            </form>
-
-            <!-- Clear Log Form -->
-            <?php if (get_option('qss_plugin_enable_logging')): ?>
-                <div class="qss-log-management" style="margin-top: 2em; padding: 1em; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
-                    <h2><?php _e('Log Management', 'qss-plugin'); ?></h2>
-                    <form method="post" style="margin-top: 1em;">
-                        <?php wp_nonce_field('qss_clear_log'); ?>
-                        <input type="submit" name="clear_log" class="button button-secondary" value="<?php esc_attr_e('Clear Log File', 'qss-plugin'); ?>" onclick="return confirm('<?php esc_attr_e('Are you sure you want to clear the log file?', 'qss-plugin'); ?>');" />
-                    </form>
-                </div>
-            <?php endif; ?>
-        </div>
-        <?php
+        include QSS_PLUGIN_DIR . 'templates/admin-options-page.php';
     }
 }
