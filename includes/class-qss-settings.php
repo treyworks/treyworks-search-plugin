@@ -76,6 +76,14 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => __('Refine your search...', 'qss-plugin')
             ),
+            'common_questions' => array(
+                'label' => __('Common Questions', 'qss-plugin'),
+                'type' => 'textarea',
+                'rows' => 5,
+                'description' => __('Enter common questions to display below the search input (one per line). These will be shown as clickable suggestions and will disappear after a search is submitted.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_textarea_field',
+                'default' => ''
+            ),
             'replace_wp_search' => array(
                 'label' => __('Replace WordPress Search', 'qss-plugin'),
                 'type' => 'checkbox',
@@ -232,7 +240,7 @@ class QSS_Plugin_Settings {
 
         // Add fields
         foreach ($this->get_settings_fields() as $key => $field) {
-            if (in_array($key, ['modal_title', 'replace_wp_search', 'enable_logging', 'search_input_placeholder'])) {
+            if (in_array($key, ['modal_title', 'replace_wp_search', 'enable_logging', 'search_input_placeholder', 'common_questions'])) {
                 $section = 'qss_plugin_general_section';
             } elseif ($key === 'searchable_post_types') {
                 $section = 'qss_plugin_search_section';

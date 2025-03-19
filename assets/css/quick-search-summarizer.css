@@ -88,6 +88,97 @@
     box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.3);
 }
 
+/* Common Questions Styles */
+.qss-common-questions {
+    margin-top: 15px;
+    padding: 10px 0;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    max-height: 300px;
+    overflow: hidden;
+    opacity: 1;
+}
+
+.qss-common-questions.qss-hidden {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+.qss-common-questions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.qss-common-questions-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+}
+
+.qss-dismiss-questions {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    transition: all 0.2s ease;
+}
+
+.qss-dismiss-questions:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #666;
+}
+
+.qss-dismiss-questions:active {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.qss-common-questions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.qss-common-question {
+    background-color: #f0f7ff;
+    color: #0073aa;
+    border: 1px solid #d0e8ff;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qss-common-question:hover {
+    background-color: #e0f0ff;
+    border-color: #0073aa;
+    box-shadow: 0 2px 4px rgba(0, 115, 170, 0.2);
+    transform: translateY(-1px);
+}
+
+.qss-common-question:active, 
+.qss-common-question.clicked {
+    background-color: #0073aa;
+    color: white;
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 /* Modal Styles */
 .qss-modal {
     display: none;
