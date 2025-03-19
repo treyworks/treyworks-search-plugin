@@ -58,6 +58,10 @@ Developed by [Clarence Pearson](https://clarencepearson.com) and sponsored by [T
 
 ## Changelog
 
+### 1.0.3
+- Added common questions setting
+- Added dismiss button for common questions
+
 ### 1.0.2
 - Added search input placeholder setting
 - Code refactoring

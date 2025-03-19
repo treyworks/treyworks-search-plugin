@@ -7,6 +7,7 @@
 // Get the modal title from options, with a default fallback
 $modal_title = get_option('qss_plugin_modal_title', __('Search the site', 'quick-search-summarizer'));
 $search_input_placeholder = get_option('qss_plugin_search_input_placeholder', __('Refine your search...', 'quick-search-summarizer'));
+$common_questions = get_option('qss_plugin_common_questions', '');
 ?>
 <!-- Modal Structure -->
 <div id="qss-modal" class="qss-modal">
@@ -27,6 +28,31 @@ $search_input_placeholder = get_option('qss_plugin_search_input_placeholder', __
                     </svg>
                 </button>
             </div>
+            
+            <?php if (!empty($common_questions)) : ?>
+            <div id="qss-common-questions" class="qss-common-questions">
+                <div class="qss-common-questions-header">
+                    <div class="qss-common-questions-title"><?php echo esc_html__('Common Questions:', 'quick-search-summarizer'); ?></div>
+                    <button type="button" class="qss-dismiss-questions" aria-label="<?php echo esc_attr__('Dismiss common questions', 'quick-search-summarizer'); ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="qss-common-questions-list">
+                    <?php 
+                    $questions = explode("\n", $common_questions);
+                    foreach ($questions as $question) {
+                        $question = trim($question);
+                        if (!empty($question)) {
+                            echo '<div class="qss-common-question">' . esc_html($question) . '</div>';
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
         <div id="qss-loading" class="qss-loading"><?php echo esc_html__('Searching...', 'quick-search-summarizer'); ?></div>

@@ -10,6 +10,8 @@ jQuery(document).ready(function($) {
     const modal = $('#qss-modal');
     const closeModal = $('.qss-close-modal');
     const clearButtons = $('.qss-clear-button');
+    const commonQuestions = $('#qss-common-questions');
+    const dismissQuestionsBtn = $('.qss-dismiss-questions');
 
     // Check for search query parameter on page load if replace WP search is enabled
     if (qssConfig.replaceWpSearch) {
@@ -38,6 +40,11 @@ jQuery(document).ready(function($) {
         if (initialQuery) {
             modalSearchInput.val(initialQuery);
             performSearch(initialQuery);
+        } else {
+            // Only show common questions when no initial query
+            if (commonQuestions.length) {
+                commonQuestions.removeClass('qss-hidden');
+            }
         }
         
         modal.addClass('active fade-in');
@@ -49,11 +56,33 @@ jQuery(document).ready(function($) {
         }
     }
 
+    // Handle dismiss button click for common questions
+    dismissQuestionsBtn.on('click', function(e) {
+        e.preventDefault();
+        commonQuestions.addClass('qss-hidden');
+    });
+
     // Handle quick search triggers
     $(document).on('click', '.qss-trigger-modal', function(e) {
         e.preventDefault();
         const searchQuery = $(this).data('search');
         showSearchModal(searchQuery);
+    });
+
+    // Handle common question clicks
+    $(document).on('click', '.qss-common-question', function() {
+        const $this = $(this);
+        const questionText = $this.text();
+        
+        // Add visual feedback
+        $this.addClass('clicked');
+        setTimeout(() => {
+            $this.removeClass('clicked');
+        }, 300);
+        
+        // Set input value and perform search
+        modalSearchInput.val(questionText);
+        performSearch(questionText);
     });
 
     // Handle initial search form submission
@@ -153,6 +182,11 @@ jQuery(document).ready(function($) {
     });
 
     function performSearch(query) {
+        // Hide common questions when search is performed
+        if (commonQuestions.length) {
+            commonQuestions.addClass('qss-hidden');
+        }
+
         // Show loading indicator
         loadingIndicator.show();
         searchResults.hide();
@@ -200,37 +234,35 @@ jQuery(document).ready(function($) {
                             </div>
                         `);
                     }
-                    
-                    // Highlight code blocks
-                    Prism.highlightAll();
                 } else {
-                    summaryContainer.html('<p>No results found.</p>');
+                    // No results found
+                    summaryContainer.html('<div class="qss-no-results">No results found. Please try a different search query.</div>');
                 }
             },
             error: function(xhr, status, error) {
                 loadingIndicator.hide();
                 searchResults.show();
                 
-                let errorMessage = 'An error occurred while searching.';
+                let errorMessage = 'An error occurred while processing your search.';
+                
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMessage = xhr.responseJSON.message;
                 }
                 
                 summaryContainer.html(`<div class="qss-error">${errorMessage}</div>`);
+                console.error('Search error:', error);
             }
         });
     }
 
     // Helper function to strip HTML tags
     function stripHtml(html) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || '';
     }
 
     // Helper function to truncate text
     function truncateText(text, maxLength) {
-        if (text.length <= maxLength) return text;
-        return text.substr(0, maxLength) + '...';
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     }
 });
