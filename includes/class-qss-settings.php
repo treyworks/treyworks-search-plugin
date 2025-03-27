@@ -124,13 +124,6 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => 'openai'
             ),
-            'integration_token' => array(
-                'label' => __('App Integration Token', 'qss-plugin'),
-                'type' => 'text',
-                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_integration_token" value="' . esc_attr(get_option('qss_plugin_integration_token')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button><button type="button" class="button button-secondary qss-generate-token">Generate New Token</button></div>',
-                'sanitize_callback' => 'sanitize_text_field',
-                'default' => ''
-            ),
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
                 'type' => 'text',
@@ -144,6 +137,13 @@ class QSS_Plugin_Settings {
                 'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_gemini_api_key" value="' . esc_attr(get_option('qss_plugin_gemini_api_key')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button></div>',
                 'sanitize_callback' => 'sanitize_text_field',
                 'condition' => array('llm_provider', 'gemini')
+            ),
+            'integration_token' => array(
+                'label' => __('REST API Integration Token', 'qss-plugin'),
+                'type' => 'text',
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_integration_token" value="' . esc_attr(get_option('qss_plugin_integration_token')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button><button type="button" class="button button-secondary qss-generate-token">Generate New Token</button></div>',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => ''
             ),
             'extract_search_term_prompt' => array(
                 'label' => __('Extract Search Term Prompt', 'qss-plugin'),
