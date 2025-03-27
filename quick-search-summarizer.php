@@ -309,15 +309,23 @@ if (!class_exists('QuickSearchSummarizer')) {
             // Integration token passed in request header
             // Example: { "qss-integration-token": "your_integration_token" }
             
-            $request_token = $request->get_header('qss-integration-token');
+            $integration_token = get_option('qss_plugin_integration_token');
+            
+            // Only verify integration token if it is not empty
+            if (!empty($integration_token) && $integration_token !== null) {
+                
+                // Get request token
+                $request_token = $request->get_header('qss-integration-token');
 
-            if (empty($request_token)) {
-                return new WP_Error('invalid_request', 'Integration token is required', ['status' => 400]);
-            }
+                // Validate request token
+                if (empty($request_token)) {
+                    return new WP_Error('invalid_request', 'Integration token is required', ['status' => 400]);
+                }
 
-            // Verify integration token
-            if ($request_token !== get_option('qss_plugin_integration_token')) {
-                return new WP_Error('forbidden', __('Invalid integration token'), ['status' => 403]);
+                // Verify integration token
+                if ($request_token !== $integration_token) {
+                    return new WP_Error('forbidden', __('Invalid integration token'), ['status' => 403]);
+                }
             }
 
             // Get settings
