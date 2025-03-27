@@ -3,7 +3,7 @@
  * Plugin Name: Quick Search Summarizer
  * Plugin URI: https://treyworks.com/quick-search-summarizer-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -120,7 +120,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     }
                     $client = QSS_Gemini_Client::get_instance();
                     break;
-                    
+
                 case 'openai':
                 default:
                     $api_key = $this->settings->get_openai_key();
@@ -135,13 +135,10 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         /**
-         * Extract search term using LLM
+         * Get prompt result using chosen LLM
          */
-        private function extract_search_term($query, $llm_provider) {
+        private function get_prompt_result($system_prompt, $query, $llm_provider) {
             $client = $this->get_llm_client($llm_provider);
-            
-            // Get custom prompt or use default
-            $system_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
 
             try {
                 if ($llm_provider === 'gemini') {
@@ -236,7 +233,15 @@ if (!class_exists('QuickSearchSummarizer')) {
                     return true; // Allow public access to the endpoint
                 }
             ]);
-    
+
+            // Register ask route
+            register_rest_route('quick-search-summarizer/v1', '/get_answer', [
+                'methods' => ['GET','POST'],
+                'callback' => [ $this, 'get_answer_callback' ],
+                'permission_callback' => function() {
+                    return true; // Allow public access to the endpoint
+                }
+            ]);
         }
 
          // Function to handle search requests
@@ -256,21 +261,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
             // Get settings
             $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
-            $api_key = '';
             
-            Plugin_Logger::log(__('* Getting LLM API Key'));
-            Plugin_Logger::log(__('* LLM Provider: ' . $llm_provider));
-            
-            if ($llm_provider === 'gemini') {
-                $api_key = $this->settings->get_gemini_key();
-            } else {
-                $api_key = $this->settings->get_openai_key();
-            }
-            
-
-            if (empty($api_key)) {
-                return new WP_Error('missing_settings', 'The LLM API Key is not set.', ['status' => 400]);
-            }
 
             try {
                 // Get request parameters
@@ -283,21 +274,21 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                 // Extract search term
                 Plugin_Logger::log(__('* Extracting search term'));
-                $extracted_search_term = $this->extract_search_term($search_query, $llm_provider);
+                // Get custom prompt or use default
+                $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+                
+                // Get prompt result
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
 
                 // Perform WordPress search
-                // Plugin_Logger::log(__('* Performing WordPress search: ' . $extracted_search_term));
-
                 $search_results = $this->search_site($extracted_search_term);
-                
-                Plugin_Logger::log(__('* Search results: ' . json_encode($search_results)));
 
-                Plugin_Logger::log(__('* Creating summary of search results'));
                 // Create summary of search results
+                Plugin_Logger::log(__('* Creating summary of search results'));
                 $summary = $this->create_summary($search_results, $search_query, $llm_provider);
                 Plugin_Logger::log(__('* Summary generated successfully'));
-
-                Plugin_Logger::log(__('* Returning search results'));
+                
+                // Return search results and summary
                 return new WP_REST_Response([
                     'query' => $search_query,
                     'results' => $search_results,
@@ -308,6 +299,52 @@ if (!class_exists('QuickSearchSummarizer')) {
                 Plugin_Logger::log(__('Search error: ' . $e->getMessage()));
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }
+        }
+
+        /** Get answer results */
+        public function get_answer_callback($request) {
+            // Log if debugging is enabled
+            Plugin_Logger::log(__('## New get answer request'));
+            
+            // Verify integration token
+            // Integration token passed in request header
+            // Example: { "qss-integration-token": "your_integration_token" }
+            
+            $request_token = $request->get_header('qss-integration-token');
+
+            if (empty($request_token)) {
+                return new WP_Error('invalid_request', 'Integration token is required', ['status' => 400]);
+            }
+
+            // Verify integration token
+            if ($request_token !== get_option('qss_plugin_integration_token')) {
+                return new WP_Error('forbidden', __('Invalid integration token'), ['status' => 403]);
+            }
+
+            // Get settings
+            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+
+            try {
+                // Get request parameters
+                $params = $request->get_json_params();
+                $search_query = $params['search_query'] ?? null;
+                $answer_prompt = get_option('qss_plugin_get_answer_prompt', QSS_Default_Prompts::GET_ANSWER);
+
+                if (empty($search_query)) {
+                    return new WP_Error('invalid_request', 'Search query is required', ['status' => 400]);
+                }
+
+                // Get answer
+                $answer = $this->get_prompt_result($answer_prompt, $search_query, $llm_provider);
+
+                // Return answer
+                return new WP_REST_Response($answer, 200);
+
+            } catch (Exception $e) {
+                Plugin_Logger::log(__('Error getting answer: ' . $e->getMessage()));
+                return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
+            }
+        
         }
 
         /**
