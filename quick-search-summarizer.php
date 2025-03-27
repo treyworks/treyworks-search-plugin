@@ -171,15 +171,12 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         /**
-         * Create summary using LLM
+         * Process search results using LLM
          */
-        private function create_summary($results, $query, $llm_provider) {
+        private function process_search_results($system_prompt, $results, $query, $llm_provider) {
 
             $client = $this->get_llm_client($llm_provider);
             
-            // Get custom prompt or use default
-            $system_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
-
             // Format results for the API
             $formatted_results = array_map(function($result) {
                 return array(
@@ -262,6 +259,8 @@ if (!class_exists('QuickSearchSummarizer')) {
             // Get settings
             $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
             
+            // Get custom prompt or use default
+            $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
 
             try {
                 // Get request parameters
@@ -285,7 +284,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                 // Create summary of search results
                 Plugin_Logger::log(__('* Creating summary of search results'));
-                $summary = $this->create_summary($search_results, $search_query, $llm_provider);
+                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query, $llm_provider);
                 Plugin_Logger::log(__('* Summary generated successfully'));
                 
                 // Return search results and summary
@@ -327,15 +326,35 @@ if (!class_exists('QuickSearchSummarizer')) {
             try {
                 // Get request parameters
                 $params = $request->get_json_params();
-                $search_query = $params['search_query'] ?? null;
-                $answer_prompt = get_option('qss_plugin_get_answer_prompt', QSS_Default_Prompts::GET_ANSWER);
 
+                // Get search query
+                $search_query = $params['search_query'] ?? null;
+
+                // Validate search query
                 if (empty($search_query)) {
                     return new WP_Error('invalid_request', 'Search query is required', ['status' => 400]);
                 }
 
+                // Extract search term
+                Plugin_Logger::log(__('* Extracting search term'));
+
+                // Get custom extract search term prompt or use default
+                $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+                
+                // Get custom get answer prompt or use default
+                $answer_prompt = get_option('qss_plugin_get_answer_prompt', QSS_Default_Prompts::GET_ANSWER);
+
+                // Get Extracted Search Term prompt result
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+                Plugin_Logger::log(__('* Extracted search term: ' . $extracted_search_term));
+
+                // Perform WordPress search
+                $search_results = $this->search_site($extracted_search_term);
+
                 // Get answer
-                $answer = $this->get_prompt_result($answer_prompt, $search_query, $llm_provider);
+                Plugin_Logger::log(__('* Getting answer'));
+                $answer = $this->process_search_results($answer_prompt, $search_results, $search_query, $llm_provider);
+                Plugin_Logger::log(__('* Answer generated successfully'));
 
                 // Return answer
                 return new WP_REST_Response($answer, 200);
