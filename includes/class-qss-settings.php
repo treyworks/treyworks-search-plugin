@@ -58,6 +58,13 @@ class QSS_Plugin_Settings {
     }
 
     /**
+     * Get Integration Token from settings
+     */
+    public function get_integration_token() {
+        return get_option('qss_plugin_integration_token');
+    }
+
+    /**
      * Get settings fields
      */
     private function get_settings_fields() {
@@ -117,6 +124,13 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => 'openai'
             ),
+            'integration_token' => array(
+                'label' => __('App Integration Token', 'qss-plugin'),
+                'type' => 'text',
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_integration_token" value="' . esc_attr(get_option('qss_plugin_integration_token')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button><button type="button" class="button button-secondary qss-generate-token">Generate New Token</button></div>',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => ''
+            ),
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
                 'type' => 'text',
@@ -146,6 +160,14 @@ class QSS_Plugin_Settings {
                 'description' => __('System prompt for creating summaries of search results.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_textarea_field',
                 'default' => QSS_Default_Prompts::CREATE_SUMMARY
+            ),
+            'get_answer_prompt' => array(
+                'label' => __('Answer Prompt', 'qss-plugin'),
+                'type' => 'textarea',
+                'rows' => 15,
+                'description' => __('System prompt for generating answers to user questions based on search results.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_textarea_field',
+                'default' => QSS_Default_Prompts::GET_ANSWER
             )
         );
     }
@@ -244,9 +266,9 @@ class QSS_Plugin_Settings {
                 $section = 'qss_plugin_general_section';
             } elseif ($key === 'searchable_post_types') {
                 $section = 'qss_plugin_search_section';
-            } elseif (in_array($key, ['llm_provider', 'openai_api_key', 'gemini_api_key'])) {
+            } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key'])) {
                 $section = 'qss_plugin_api_section';
-            } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt'])) {
+            } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt', 'get_answer_prompt'])) {
                 $section = 'qss_plugin_prompts_section';
             } else {
                 $section = 'qss_plugin_settings_section';

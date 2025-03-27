@@ -38,6 +38,57 @@ Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summar
 3. Customize any additional settings as needed
 4. Save your changes
 
+## API Integration
+
+Quick Search Summarizer provides an API endpoint for integrating with external applications. This allows you to leverage the plugin's AI-powered search and answer capabilities from other systems.
+
+### Setup
+
+1. Go to Settings > Quick Search Summarizer in your WordPress admin panel
+2. Generate an integration token using the "Generate New Token" button in the API Settings section
+3. Save your settings to store the generated token
+
+### Endpoint
+
+The plugin exposes the following endpoint:
+
+```
+/wp-json/quick-search-summarizer/v1/get_answer
+```
+
+### Authentication
+
+All API requests require the integration token to be included in the request headers:
+
+```
+qss-integration-token: YOUR_INTEGRATION_TOKEN
+```
+
+### Examples
+
+#### POST Request
+
+```bash
+curl -X POST \
+  "https://treyworks.local/wp-json/quick-search-summarizer/v1/get_answer" \
+  -H "Content-Type: application/json" \
+  -H "qss-integration-token: YOUR_INTEGRATION_TOKEN" \
+  -d '{"search_query": "How do I use WordPress?"}'
+```
+
+#### GET Request
+
+```bash
+curl -X GET \
+  "https://your-site.com/wp-json/quick-search-summarizer/v1/get_answer?search_query=How%20do%20I%20use%20WordPress%3F" \
+  -H "Content-Type: application/json" \
+  -H "qss-integration-token: YOUR_INTEGRATION_TOKEN"
+```
+
+### Response
+
+The endpoint returns a concise, structured response optimized for integration with AI agents and other systems. The response format is plain text that can be directly passed to other AI systems.
+
 ## Requirements
 
 - WordPress 6.6 or higher
@@ -57,6 +108,11 @@ This plugin is licensed under the GPL v2 or later.
 Developed by [Clarence Pearson](https://clarencepearson.com) and sponsored by [TreyWorks LLC](https://treyworks.com).
 
 ## Changelog
+
+### 1.0.4
+- Added API integration token
+- Added API endpoint documentation
+- Added answer REST API endpoint
 
 ### 1.0.3
 - Added common questions setting
