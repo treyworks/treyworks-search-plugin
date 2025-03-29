@@ -12,6 +12,14 @@ jQuery(document).ready(function($) {
     const clearButtons = $('.qss-clear-button');
     const commonQuestions = $('#qss-common-questions');
     const dismissQuestionsBtn = $('.qss-dismiss-questions');
+    
+    // Question form elements
+    const questionForm = $('#qss-question-form');
+    const questionInput = $('#qss-question-input');
+    const answerContainer = $('#qss-answer-container');
+    const answerContent = $('.qss-answer-content');
+    const questionLoading = $('#qss-question-loading');
+    const clearFormButton = $('#qss-clear-form');
 
     // Check for search query parameter on page load if replace WP search is enabled
     if (qssConfig.replaceWpSearch) {
@@ -254,6 +262,72 @@ jQuery(document).ready(function($) {
             }
         });
     }
+
+    // Handle question form submission
+    questionForm.on('submit', function(e) {
+        e.preventDefault();
+        const query = questionInput.val().trim();
+        if (!query) return;
+        
+        // Show loading indicator
+        questionLoading.show();
+        questionForm.hide();
+        answerContainer.hide();
+        
+        // Make API call to get_answer endpoint
+        $.ajax({
+            url: qssConfig.get_answer_url,
+            method: 'POST',
+            headers: {
+                'X-WP-Nonce': qssConfig.nonce,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                search_query: query
+            }),
+            success: function(response) {
+                // Hide loading indicator
+                questionLoading.hide();
+                
+                // Display answer
+                const parsedAnswer = marked.parse(response);
+                answerContent.html('<div class="qss-markdown">' + parsedAnswer + '</div>');
+                answerContainer.show();
+                questionForm.show();
+            },
+            error: function(xhr, status, error) {
+                questionLoading.hide();
+                
+                let errorMessage = 'An error occurred while processing your question.';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                answerContent.html(`<div class="qss-error">${errorMessage}</div>`);
+                answerContainer.show();
+                questionForm.show();
+                console.error('Question error:', error);
+            }
+        });
+    });
+    
+    // Handle clear form button click
+    clearFormButton.on('click', function() {
+        questionInput.val('').focus();
+        answerContainer.hide();
+    });
+    
+    // Handle clear button for question input
+    questionForm.find('.qss-clear-button').on('click', function() {
+        questionInput.val('').focus();
+    });
+
+    // Show/hide clear button for question input
+    questionInput.on('input', function() {
+        const clearButton = $(this).siblings('.qss-clear-button');
+        clearButton.css('opacity', this.value.length ? '1' : '0');
+    }).trigger('input');
 
     // Helper function to strip HTML tags
     function stripHtml(html) {

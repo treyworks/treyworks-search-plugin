@@ -7,6 +7,7 @@ class QSS_Core {
     public function __construct() {
         add_action('init', array($this, 'init'));
         add_shortcode('quick_search_summarizer', array($this, 'render_search_form'));
+        add_shortcode('quick_search_answer', array($this, 'render_question_form'));
         add_action('wp_footer', array($this, 'render_modal'));
     }
 
@@ -17,17 +18,13 @@ class QSS_Core {
 
     public function render_search_form() {
         ob_start();
-        ?>
-        <form id="qss-search-form" class="qss-search-form">
-            <div class="qss-search-input-group">
-                <div class="qss-search-input-wrapper">
-                    <input type="text" id="qss-search-input" class="qss-search-input" placeholder="<?php echo esc_attr__('Enter your search query...', 'quick-search-summarizer'); ?>" required>
-                    <button type="button" class="qss-clear-button" aria-label="Clear search">&times;</button>
-                </div>
-                <button type="submit" class="qss-search-button"><?php echo esc_html__('Search', 'quick-search-summarizer'); ?></button>
-            </div>
-        </form>
-        <?php
+        include QSS_PLUGIN_DIR . 'templates/search-form.php';
+        return ob_get_clean();
+    }
+
+    public function render_question_form() {
+        ob_start();
+        include QSS_PLUGIN_DIR . 'templates/question-form.php';
         return ob_get_clean();
     }
 
@@ -89,7 +86,8 @@ class QSS_Core {
                 'replaceWpSearch' => (bool) get_option('qss_plugin_replace_wp_search', false),
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('wp_rest'),
-                'rest_url' => esc_url_raw(rest_url('quick-search-summarizer/v1/search'))
+                'rest_url' => esc_url_raw(rest_url('quick-search-summarizer/v1/search')),
+                'get_answer_url' => esc_url_raw(rest_url('quick-search-summarizer/v1/get_answer'))
             )
         );
     }

@@ -233,7 +233,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
             // Register ask route
             register_rest_route('quick-search-summarizer/v1', '/get_answer', [
-                'methods' => ['GET','POST'],
+                'methods' => ['POST'],
                 'callback' => [ $this, 'get_answer_callback' ],
                 'permission_callback' => function() {
                     return true; // Allow public access to the endpoint
@@ -305,26 +305,29 @@ if (!class_exists('QuickSearchSummarizer')) {
             // Log if debugging is enabled
             Plugin_Logger::log(__('## New get answer request'));
             
-            // Verify integration token
-            // Integration token passed in request header
-            // Example: { "qss-integration-token": "your_integration_token" }
-            
-            $integration_token = get_option('qss_plugin_integration_token');
-            
-            // Only verify integration token if it is not empty
-            if (!empty($integration_token) && $integration_token !== null) {
+            // Verify request server
+            if (!$this->verify_request_server()) {
+                // Verify integration token if request is not from server
                 
-                // Get request token
-                $request_token = $request->get_header('qss-integration-token');
+                // Integration token passed in request header
+                // Example: { "qss-integration-token": "your_integration_token" }
+                $integration_token = get_option('qss_plugin_integration_token');
+            
+                // Only verify integration token if it is not empty
+                if (!empty($integration_token) && $integration_token !== null) {
+                    
+                    // Get request token
+                    $request_token = $request->get_header('qss-integration-token');
 
-                // Validate request token
-                if (empty($request_token)) {
-                    return new WP_Error('invalid_request', 'Integration token is required', ['status' => 400]);
-                }
+                    // Validate request token
+                    if (empty($request_token)) {
+                        return new WP_Error('invalid_request', 'Integration token is required', ['status' => 400]);
+                    }
 
-                // Verify integration token
-                if ($request_token !== $integration_token) {
-                    return new WP_Error('forbidden', __('Invalid integration token'), ['status' => 403]);
+                    // Verify integration token
+                    if ($request_token !== $integration_token) {
+                        return new WP_Error('forbidden', __('Invalid integration token'), ['status' => 403]);
+                    }
                 }
             }
 
@@ -335,8 +338,20 @@ if (!class_exists('QuickSearchSummarizer')) {
                 // Get request parameters
                 $params = $request->get_json_params();
 
-                // Get search query
-                $search_query = $params['search_query'] ?? null;
+                // Get search query - check multiple sources
+                $search_query = null;
+                
+                // First check direct search_query parameter in JSON body
+                if (isset($params['search_query'])) {
+                    $search_query = $params['search_query'];
+                }
+                // Then check args parameter that contains search_query
+                elseif (isset($params['args'])) {
+                    $args = is_string($params['args']) ? json_decode($params['args'], true) : $params['args'];
+                    if (isset($args['search_query'])) {
+                        $search_query = $args['search_query'];
+                    }
+                }
 
                 // Validate search query
                 if (empty($search_query)) {

@@ -20,12 +20,13 @@
     flex: 1;
     display: flex;
     align-items: center;
+    position: relative;
 }
 
 .qss-search-input {
     width: 100%;
     padding: 10px;
-    padding-right: 35px;
+    padding-right: 20px;
     font-size: 16px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -59,7 +60,7 @@
 
 .qss-clear-button {
     position: absolute;
-    right: 8px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -86,6 +87,54 @@
 .qss-clear-button:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.3);
+}
+
+.qss-clear-form-button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.qss-clear-form-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.qss-form-actions {
+    display: none;
+}
+
+.qss-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+}
+
+.qss-loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #0073aa;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: qss-spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes qss-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Common Questions Styles */
@@ -301,87 +350,52 @@
     padding-left: 20px;
 }
 
-/* Loading indicator */
-.qss-loading {
-    display: none;
-    text-align: center;
-    padding: 1rem;
+/* Question Form Styles */
+.qss-question-container {
+    max-width: 800px;
 }
 
-.qss-loading::after {
-    content: '';
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #0073aa;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+/* Answer Container Styles */
+.qss-answer-container {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f8f9fa;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.qss-answer-content {
+    margin-bottom: 0;
 }
 
-@keyframes slide-in-bck-center {
-    0% {
-        transform: translateZ(600px);
-        opacity: 0;
-    }
-    100% {
-        transform: translateZ(0);
-        opacity: 1;
-    }
+.qss-answer-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
 }
 
-@keyframes slide-out-bck-center {
-    0% {
-        transform: translateZ(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translateZ(600px);
-        opacity: 0;
-    }
+.qss-reset-button {
+    background-color: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-@keyframes fade-in {
-    0% {
-        opacity: 0;
-        backdrop-filter: blur(0px);
-    }
-    100% {
-        opacity: 1;
-        backdrop-filter: blur(10px);
-    }
+.qss-reset-button:hover {
+    background-color: #005177;
 }
 
-@keyframes fade-out {
-    0% {
-        opacity: 1;
-        backdrop-filter: blur(10px);
-    }
-    100% {
-        opacity: 0;
-        backdrop-filter: blur(0px);
-    }
-}
-
-.slide-in-bck-center {
-    animation: slide-in-bck-center 0.35s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-}
-
-.slide-out-bck-center {
-    animation: slide-out-bck-center 0.35s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
-}
-
-.fade-in {
-    animation: fade-in 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
-}
-
-.fade-out {
-    animation: fade-out 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+/* Error message */
+.qss-error {
+    color: #dc3232;
+    padding: 10px;
+    background-color: #fdf2f2;
+    border-left: 4px solid #dc3232;
+    margin-bottom: 20px;
 }
 
 /* Content styles */
@@ -496,33 +510,35 @@
     margin-bottom: 1em;
 }
 
+.qss-markdown ul, .qss-markdown ol {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+.qss-markdown h1, .qss-markdown h2, .qss-markdown h3, 
+.qss-markdown h4, .qss-markdown h5, .qss-markdown h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
 .qss-markdown code {
-    background-color: #f5f5f5;
-    padding: 2px 4px;
+    background-color: #f0f0f0;
+    padding: 0.2em 0.4em;
     border-radius: 3px;
     font-family: monospace;
 }
 
 .qss-markdown pre {
     background-color: #f5f5f5;
-    padding: 15px;
-    border-radius: 4px;
+    padding: 1em;
+    border-radius: 5px;
     overflow-x: auto;
-    margin: 1em 0;
+    margin-bottom: 1em;
 }
 
 .qss-markdown pre code {
     background-color: transparent;
     padding: 0;
-}
-
-/* Error message */
-.qss-error {
-    color: #dc3232;
-    padding: 10px;
-    background-color: #fdf2f2;
-    border-left: 4px solid #dc3232;
-    margin-bottom: 20px;
 }
 
 /* Responsive styles */
@@ -547,4 +563,64 @@
 
 .qss-search-results {
     padding: 1rem;
+}
+
+@keyframes slide-in-bck-center {
+    0% {
+        transform: translateZ(600px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateZ(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-out-bck-center {
+    0% {
+        transform: translateZ(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateZ(600px);
+        opacity: 0;
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    100% {
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+    100% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+}
+
+.slide-in-bck-center {
+    animation: slide-in-bck-center 0.35s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+.slide-out-bck-center {
+    animation: slide-out-bck-center 0.35s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+}
+
+.fade-in {
+    animation: fade-in 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+
+.fade-out {
+    animation: fade-out 0.35s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
 }

@@ -55,7 +55,10 @@ $common_questions = get_option('qss_plugin_common_questions', '');
             <?php endif; ?>
         </div>
 
-        <div id="qss-loading" class="qss-loading"><?php echo esc_html__('Searching...', 'quick-search-summarizer'); ?></div>
+        <div id="qss-loading" class="qss-loading" style="display: none;">
+        <div class="qss-loader"></div>
+            <?php echo esc_html__('Searching...', 'quick-search-summarizer'); ?>
+        </div>
 
         <div id="qss-search-results" class="qss-search-results" style="display: none;">
             <div id="qss-summary" class="qss-summary"></div>
