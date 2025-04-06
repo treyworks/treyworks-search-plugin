@@ -4,7 +4,13 @@ if (!defined('ABSPATH')) {
 }
 ?>
 <div class="qss-question-container">
-    <form id="qss-question-form" class="qss-search-form">
+    <form 
+        id="qss-question-form" 
+        class="qss-search-form"
+        <?php if (!empty($post_ids)) : ?>
+            data-post-ids="<?php echo esc_attr($post_ids); ?>" 
+        <?php endif; ?>
+    >
         <div class="qss-search-input-group">
             <div class="qss-search-input-wrapper">
                 <input type="text" id="qss-question-input" class="qss-search-input" placeholder="<?php echo esc_attr__('Ask a question...', 'quick-search-summarizer'); ?>" required>

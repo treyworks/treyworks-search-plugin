@@ -7,7 +7,7 @@ class QSS_Core {
     public function __construct() {
         add_action('init', array($this, 'init'));
         add_shortcode('quick_search_summarizer', array($this, 'render_search_form'));
-        add_shortcode('quick_search_answer', array($this, 'render_question_form'));
+        add_shortcode('quick_search_answer', array($this, 'render_question_form')); 
         add_action('wp_footer', array($this, 'render_modal'));
     }
 
@@ -22,8 +22,21 @@ class QSS_Core {
         return ob_get_clean();
     }
 
-    public function render_question_form() {
+    public function render_question_form($atts) { 
+        // Extract attributes, specifically 'post_ids'
+        $atts = shortcode_atts(
+            array(
+                'post_ids' => '', // Default to empty string
+            ),
+            $atts,
+            'quick_search_answer'
+        );
+
+        // Sanitize the post_ids attribute (basic sanitation)
+        $post_ids = sanitize_text_field($atts['post_ids']);
+        
         ob_start();
+        // Pass the post_ids to the template
         include QSS_PLUGIN_DIR . 'templates/question-form.php';
         return ob_get_clean();
     }

@@ -75,7 +75,8 @@ if (!class_exists('QuickSearchSummarizer')) {
         /**
          * Site Search Function
          */
-        private function search_site($search_term) {
+        private function search_site($search_term, $post_ids = null) {
+            // Search query arguments
             $args = array(
                 's' => $search_term,
                 'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
@@ -83,25 +84,44 @@ if (!class_exists('QuickSearchSummarizer')) {
                 'posts_per_page' => -1,
             );
 
+            // If specific post IDs are provided, add them to the query
+            if (!empty($post_ids) && is_array($post_ids)) {
+                // Ensure IDs are integers
+                $post_ids = array_map('intval', $post_ids);
+                $args['post__in'] = $post_ids;
+                // When post__in is used, 's' is ignored, so we remove it to avoid confusion
+                // We will filter by content later if needed, though typically specifying IDs means we want only those.
+                unset($args['s']); 
+            }
+
+            // Perform the search
             $search_query = new WP_Query($args);
             $search_results = array();
 
+            // Get search results
             if ($search_query->have_posts()) {
+
+                // Loop through search results
                 $result_count = 0;
                 while ($search_query->have_posts()) {
                     $search_query->the_post();
                     if ($result_count < 5) {
+
+                        // Get post content
+                        $content = wp_strip_all_tags(get_the_content());
                         $search_results[] = array(
                             'title' => get_the_title(),
-                            'content' => wp_strip_all_tags(get_the_content()),
+                            'content' => $content,
                             'permalink' => get_permalink()
                         );
                     } else {
+
                         $search_results[] = array(
                             'title' => get_the_title(),
                             'permalink' => get_permalink()
                         );
                     }
+                    // Increment result count
                     $result_count++;
                 }
             }
@@ -112,8 +132,10 @@ if (!class_exists('QuickSearchSummarizer')) {
 
         private function get_llm_client($llm_provider = 'openai') {
             
+            // Check LLM provider
             switch ($llm_provider) {
                 case 'gemini':
+                    // Gemini
                     $api_key = $this->settings->get_gemini_key();
                     if (empty($api_key)) {
                         throw new Exception('Google Gemini API key is not set.');
@@ -123,6 +145,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                 case 'openai':
                 default:
+                    // OpenAI
                     $api_key = $this->settings->get_openai_key();
                     if (empty($api_key)) {
                         throw new Exception('OpenAI API key is not set.');
@@ -280,7 +303,16 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
 
                 // Perform WordPress search
-                $search_results = $this->search_site($extracted_search_term);
+                $post_ids = null;
+                if (isset($params['post_ids'])) {
+                    $post_ids = array_map('intval', explode(',', sanitize_text_field($params['post_ids'])));
+                    $post_ids = array_filter($post_ids, function($id) { return $id > 0; }); // Ensure positive integers
+                    if (empty($post_ids)) {
+                        $post_ids = null; // Reset if parsing resulted in empty array
+                    }
+                }
+
+                $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Create summary of search results
                 Plugin_Logger::log(__('* Creating summary of search results'));
@@ -371,8 +403,18 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
                 Plugin_Logger::log(__('* Extracted search term: ' . $extracted_search_term));
 
+                // Get post IDs from request
+                $post_ids = null;
+                if (isset($params['post_ids'])) {
+                    $post_ids = array_map('intval', explode(',', sanitize_text_field($params['post_ids'])));
+                    $post_ids = array_filter($post_ids, function($id) { return $id > 0; }); // Ensure positive integers
+                    if (empty($post_ids)) {
+                        $post_ids = null; // Reset if parsing resulted in empty array
+                    }
+                }
+
                 // Perform WordPress search
-                $search_results = $this->search_site($extracted_search_term);
+                $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Get answer
                 Plugin_Logger::log(__('* Getting answer'));

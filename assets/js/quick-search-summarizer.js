@@ -264,28 +264,43 @@ jQuery(document).ready(function($) {
     }
 
     // Handle question form submission
-    questionForm.on('submit', function(e) {
+    $(document).on('submit', '#qss-question-form', function (e) {
         e.preventDefault();
-        const query = questionInput.val().trim();
-        if (!query) return;
+        const $form = $(this);
+        const question = questionInput.val();
+        const postIds = $form.data('post-ids'); // Get post IDs from data attribute
+
+        // Basic validation
+        if (!question.trim()) {
+            alert('Please enter a question.');
+            return;
+        }
+
+        // Prepare data for AJAX request
+        const data = {
+            search_query: question,
+        };
         
+        // Add post_ids to data if available
+        if (postIds) {
+            data.post_ids = postIds;
+        }
+
         // Show loading indicator
         questionLoading.show();
         questionForm.hide();
         answerContainer.hide();
-        
-        // Make API call to get_answer endpoint
+
+        // Make API call to the /get_answer endpoint
         $.ajax({
-            url: qssConfig.get_answer_url,
-            method: 'POST',
+            url: qssConfig.get_answer_url, // Use the REST API endpoint URL
+            type: 'POST', 
             headers: {
                 'X-WP-Nonce': qssConfig.nonce,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            data: JSON.stringify({
-                search_query: query
-            }),
-            success: function(response) {
+            data: JSON.stringify(data), 
+            success: function (response) {
                 // Hide loading indicator
                 questionLoading.hide();
                 
