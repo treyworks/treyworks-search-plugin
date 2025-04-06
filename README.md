@@ -38,6 +38,46 @@ Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summar
 3. Customize any additional settings as needed
 4. Save your changes
 
+## Shortcodes
+
+Quick Search Summarizer provides two shortcodes that you can use to integrate the search functionality into your posts, pages, or custom templates:
+
+### [quick_search_summarizer]
+
+This shortcode displays a search form that allows users to enter a search query and get AI-powered summaries of the results.
+
+**Usage:**
+```
+[quick_search_summarizer]
+```
+
+**Example:**
+```php
+<?php echo do_shortcode('[quick_search_summarizer]'); ?>
+```
+
+### [quick_search_answer]
+
+This shortcode displays a question form that allows users to ask questions and get AI-generated answers. You can optionally limit the search to specific posts.
+
+**Usage:**
+```
+[quick_search_answer]
+```
+
+**Parameters:**
+- `post_ids` (optional): Comma-separated list of post IDs to limit the search to specific posts
+
+**Example with post_ids:**
+```
+[quick_search_answer post_ids="1,2,3,4"]
+```
+
+**Example in PHP:**
+```php
+<?php echo do_shortcode('[quick_search_answer post_ids="1,2,3,4"]'); ?>
+```
+
 ## API Integration
 
 Quick Search Summarizer provides an API endpoint for integrating with external applications. This allows you to leverage the plugin's AI-powered search and answer capabilities from other systems.
