@@ -13,10 +13,10 @@ if (!defined('ABSPATH')) {
     >
         <div class="qss-search-input-group">
             <div class="qss-search-input-wrapper">
-                <input type="text" id="qss-question-input" class="qss-search-input" placeholder="<?php echo esc_attr__('Ask a question...', 'quick-search-summarizer'); ?>" required>
+                <input type="text" id="qss-question-input" class="qss-search-input" placeholder="<?php echo esc_attr__('Ask a question...', 'treyworks-search'); ?>" required>
                 <button type="button" class="qss-clear-button" aria-label="Clear question">&times;</button>
             </div>
-            <button type="submit" class="qss-search-button"><?php echo esc_html__('Ask', 'quick-search-summarizer'); ?></button>
+            <button type="submit" class="qss-search-button"><?php echo esc_html__('Ask', 'treyworks-search'); ?></button>
         </div>
     </form>
 
@@ -26,6 +26,6 @@ if (!defined('ABSPATH')) {
 
     <div id="qss-question-loading" class="qss-loading" style="display: none;">
         <div class="qss-loader"></div>
-        <p><?php echo esc_html__('Finding your answer...', 'quick-search-summarizer'); ?></p>
+        <p><?php echo esc_html__('Finding your answer...', 'treyworks-search'); ?></p>
     </div>
 </div>

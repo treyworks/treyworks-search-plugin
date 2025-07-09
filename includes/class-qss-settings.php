@@ -30,15 +30,15 @@ class QSS_Plugin_Settings {
      * Enqueue admin scripts
      */
     public function enqueue_admin_scripts($hook) {
-        if ('settings_page_qss-plugin-settings' !== $hook) {
+        if ('treyworks-search_page_qss-plugin-settings' !== $hook) {
             return;
         }
 
         wp_enqueue_script(
             'qss-admin',
-            QSS_PLUGIN_URL . 'assets/js/admin.js',
+            PLUGIN_URL . 'assets/js/admin.js',
             array('jquery'),
-            QSS_VERSION,
+            PLUGIN_VERSION,
             true
         );
     }
@@ -62,6 +62,13 @@ class QSS_Plugin_Settings {
      */
     public function get_integration_token() {
         return get_option('qss_plugin_integration_token');
+    }
+
+    /**
+     * Get LLM Model name from settings
+     */
+    public function get_llm_model() {
+        return get_option('qss_plugin_llm_model');
     }
 
     /**
@@ -94,7 +101,7 @@ class QSS_Plugin_Settings {
             'replace_wp_search' => array(
                 'label' => __('Replace WordPress Search', 'qss-plugin'),
                 'type' => 'checkbox',
-                'description' => __('Use Quick Search Summarizer as the primary WordPress search interface. When enabled, the default WordPress search will open the AI-powered search modal.', 'qss-plugin'),
+                'description' => __('Use Treyworks Search as the primary WordPress search interface. When enabled, the default WordPress search will open the AI-powered search modal.', 'qss-plugin'),
                 'sanitize_callback' => 'rest_sanitize_boolean',
                 'default' => false
             ),
@@ -117,12 +124,19 @@ class QSS_Plugin_Settings {
                 'label' => __('AI Model Provider', 'qss-plugin'),
                 'type' => 'select',
                 'options' => array(
-                    'openai' => __('OpenAI GPT-4', 'qss-plugin'),
+                    'openai' => __('OpenAI', 'qss-plugin'),
                     'gemini' => __('Google Gemini', 'qss-plugin')
                 ),
                 'description' => __('Select which AI model provider to use for search and summarization.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => 'openai'
+            ),
+            'llm_model' => array(
+                'label' => __('LLM Model Name', 'qss-plugin'),
+                'type' => 'text',
+                'description' => __('Name of the model to use with the selected provider.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'gpt-4'
             ),
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
@@ -204,9 +218,10 @@ class QSS_Plugin_Settings {
      * Add plugin options page
      */
     public function add_options_page() {
-        add_options_page(
-            __('Quick Search Summarizer', 'qss-plugin'),
-            __('Quick Search Summarizer', 'qss-plugin'),
+        add_submenu_page(
+            'treyworks-search',
+            __('Settings', 'qss-plugin'),
+            __('Settings', 'qss-plugin'),
             'manage_options',
             'qss-plugin-settings',
             array($this, 'render_options_page')
@@ -266,7 +281,7 @@ class QSS_Plugin_Settings {
                 $section = 'qss_plugin_general_section';
             } elseif ($key === 'searchable_post_types') {
                 $section = 'qss_plugin_search_section';
-            } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key'])) {
+            } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key', 'llm_model'])) {
                 $section = 'qss_plugin_api_section';
             } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt', 'get_answer_prompt'])) {
                 $section = 'qss_plugin_prompts_section';
@@ -436,6 +451,6 @@ class QSS_Plugin_Settings {
         }
 
         settings_errors('qss_plugin_messages');
-        include QSS_PLUGIN_DIR . 'templates/admin-options-page.php';
+        include PLUGIN_DIR . 'templates/admin-options-page.php';
     }
 }

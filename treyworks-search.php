@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: Quick Search Summarizer
- * Plugin URI: https://treyworks.com/quick-search-summarizer-plugin/
+ * Plugin Name: Treyworks Search for WordPress
+ * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.0.4
+ * Version: 1.2.0
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: quick-search-summarizer
+ * Text Domain: treyworks-search
  */
 
 if (!defined('ABSPATH')) {
@@ -18,6 +18,53 @@ if (!defined('ABSPATH')) {
 // Load Composer dependencies
 if (file_exists(dirname(__FILE__) . '/vendor/autoload.php')) {
     require_once dirname(__FILE__) . '/vendor/autoload.php';
+}
+
+// Define plugin activation and deactivation hooks
+register_activation_hook(__FILE__, 'treyworks_search_activate');
+register_uninstall_hook(__FILE__, 'treyworks_search_uninstall');
+
+/**
+ * Plugin activation function
+ * Creates the logs database table
+ */
+function treyworks_search_activate() {
+    // Include DB Logger class
+    require_once plugin_dir_path(__FILE__) . 'includes/class-db-logger.php';
+    
+    // Create logs table
+    DB_Logger::create_table();
+}
+
+/**
+ * Plugin uninstall function
+ * Drops the logs database table
+ */
+function treyworks_search_uninstall() {
+    // Include DB Logger class
+    require_once plugin_dir_path(__FILE__) . 'includes/class-db-logger.php';
+    
+    // Drop logs table if user confirmed
+    if (get_option('treyworks_search_confirm_uninstall', false)) {
+        DB_Logger::drop_table();
+    }
+}
+
+/**
+ * Global logging function
+ * 
+ * @param string|array $message The message to log
+ * @param string $level The log level (info, warning, error, debug)
+ * @param array $context Additional context data
+ * @return bool Whether the log was successfully added
+ */
+function treyworks_log($message, $level = 'info', $context = []) {
+    // Include DB Logger class if not already included
+    if (!class_exists('DB_Logger')) {
+        require_once plugin_dir_path(__FILE__) . 'includes/class-db-logger.php';
+    }
+    
+    return DB_Logger::log($message, $level, $context);
 }
 
 if (!class_exists('QuickSearchSummarizer')) {
@@ -39,14 +86,26 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function define_constants() {
-            define('QSS_VERSION', '1.0.0');
-            define('QSS_PLUGIN_DIR', plugin_dir_path(__FILE__));
-            define('QSS_PLUGIN_URL', plugin_dir_url(__FILE__));
+            define('PLUGIN_VERSION', '1.2.0');
+            define('PLUGIN_DIR', plugin_dir_path(__FILE__));
+            define('PLUGIN_URL', plugin_dir_url(__FILE__));
         }
 
         private function init_hooks() {
             add_action('plugins_loaded', array($this, 'init_plugin'));
             add_action('rest_api_init', [$this, 'register_rest_api_routes']);
+            add_action('admin_init', [$this, 'register_settings']);
+        }
+
+        /**
+         * Register plugin settings
+         */
+        public function register_settings() {
+            register_setting('treyworks_search_settings', 'treyworks_search_confirm_uninstall', [
+                'type' => 'boolean',
+                'default' => false,
+                'sanitize_callback' => 'rest_sanitize_boolean',
+            ]);
         }
 
         public function init_plugin() {
@@ -55,21 +114,35 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function load_dependencies() {
-            // Load logger class
-            require_once QSS_PLUGIN_DIR . '/includes/class-logger.php';
-            require_once QSS_PLUGIN_DIR . '/includes/class-qss-prompts.php';
-            require_once QSS_PLUGIN_DIR . 'includes/class-qss-settings.php';
-            require_once QSS_PLUGIN_DIR . 'includes/class-qss-core.php';
-            require_once QSS_PLUGIN_DIR . '/includes/class-openai-client.php';
-            require_once QSS_PLUGIN_DIR . '/includes/class-gemini-client.php';
+            // Load logger classes
+            require_once PLUGIN_DIR . '/includes/class-logger.php'; // Keep for backward compatibility
+            require_once PLUGIN_DIR . '/includes/class-db-logger.php';
+            require_once PLUGIN_DIR . '/includes/class-admin-logs.php';
+            require_once PLUGIN_DIR . '/includes/class-settings.php';
+            require_once PLUGIN_DIR . '/includes/class-qss-prompts.php';
+            require_once PLUGIN_DIR . 'includes/class-qss-settings.php';
+            require_once PLUGIN_DIR . 'includes/class-qss-core.php';
+            require_once PLUGIN_DIR . '/includes/class-openai-client.php';
+            require_once PLUGIN_DIR . '/includes/class-gemini-client.php';
         }
 
         private function init_classes() {
+            // Initialize Admin Logs first (creates main admin menu)
+            Admin_Logs::init();
+            
+            // Initialize Settings
             $this->settings = QSS_Plugin_Settings::get_instance();
-            $this->core = new QSS_Core();
+            
+            // Initialize the core functionality
+            if (class_exists('QSS_Core')) {
+                $this->core = new QSS_Core();
+            }
 
             // Initialize the logger
-            Plugin_Logger::initialize();
+            
+            if (class_exists('DB_Logger')) {
+                DB_Logger::initialize(); // Initialize database logger
+            }
         }
 
         /**
@@ -171,7 +244,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     return $response->text();
                 } else {
                     $response = $client->chat()->create([
-                        'model' => 'gpt-4',
+                        'model' => $this->settings->get_llm_model(),
                         'messages' => [
                             [
                                 'role' => 'system',
@@ -188,7 +261,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     return $response->choices[0]->message->content;
                 }
             } catch (Exception $e) {
-                error_log('LLM API Error: ' . $e->getMessage());
+                treyworks_log('LLM API Error: ' . $e->getMessage());
                 return $query;
             }
         }
@@ -222,7 +295,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     return $response->text();
                 } else {
                     $response = $client->chat()->create([
-                        'model' => 'gpt-4',
+                        'model' => $this->settings->get_llm_model(),
                         'messages' => [
                             [
                                 'role' => 'system',
@@ -239,14 +312,14 @@ if (!class_exists('QuickSearchSummarizer')) {
                     return $response->choices[0]->message->content;
                 }
             } catch (Exception $e) {
-                error_log('LLM API Error: ' . $e->getMessage());
+                treyworks_log('LLM API Error: ' . $e->getMessage());
                 return '';
             }
         }
 
         public function register_rest_api_routes() {
             // Register search route
-            register_rest_route('quick-search-summarizer/v1', '/search', [
+            register_rest_route('treyworks-search/v1', '/search', [
                 'methods' => ['POST'],
                 'callback' => [ $this, 'get_search_results' ],
                 'permission_callback' => function() {
@@ -255,7 +328,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             ]);
 
             // Register ask route
-            register_rest_route('quick-search-summarizer/v1', '/get_answer', [
+            register_rest_route('treyworks-search/v1', '/get_answer', [
                 'methods' => ['POST'],
                 'callback' => [ $this, 'get_answer_callback' ],
                 'permission_callback' => function() {
@@ -266,8 +339,6 @@ if (!class_exists('QuickSearchSummarizer')) {
 
          // Function to handle search requests
         public function get_search_results($request) {
-            // Log if debugging is enabled
-            Plugin_Logger::log(__('## New search request'));
             
             // Verify nonce
             if (!$this->verify_nonce($request)) {
@@ -295,8 +366,6 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
 
                 // Extract search term
-                Plugin_Logger::log(__('* Extracting search term'));
-                // Get custom prompt or use default
                 $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
                 
                 // Get prompt result
@@ -315,9 +384,15 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Create summary of search results
-                Plugin_Logger::log(__('* Creating summary of search results'));
                 $summary = $this->process_search_results($summary_prompt, $search_results, $search_query, $llm_provider);
-                Plugin_Logger::log(__('* Summary generated successfully'));
+
+                // Log search results with referer URL
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Search complete: ' . $search_query), 'info', [
+                    'extracted_search_term' => $extracted_search_term, 
+                    'summary' => $summary,
+                    'referer' => $referer
+                ]);
                 
                 // Return search results and summary
                 return new WP_REST_Response([
@@ -327,29 +402,31 @@ if (!class_exists('QuickSearchSummarizer')) {
                 ], 200);
 
             } catch (Exception $e) {
-                Plugin_Logger::log(__('Search error: ' . $e->getMessage()));
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Search error: ' . $e->getMessage()), 'error', [
+                    'exception' => get_class($e),
+                    'referer' => $referer
+                ]);
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }
         }
 
         /** Get answer results */
         public function get_answer_callback($request) {
-            // Log if debugging is enabled
-            Plugin_Logger::log(__('## New get answer request'));
             
             // Verify request server
             if (!$this->verify_request_server()) {
                 // Verify integration token if request is not from server
                 
                 // Integration token passed in request header
-                // Example: { "qss-integration-token": "your_integration_token" }
+                // Example: { "treyworks-search-token": "your_integration_token" }
                 $integration_token = get_option('qss_plugin_integration_token');
             
                 // Only verify integration token if it is not empty
                 if (!empty($integration_token) && $integration_token !== null) {
                     
                     // Get request token
-                    $request_token = $request->get_header('qss-integration-token');
+                    $request_token = $request->get_header('treyworks-search-token');
 
                     // Validate request token
                     if (empty($request_token)) {
@@ -391,8 +468,6 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
 
                 // Extract search term
-                Plugin_Logger::log(__('* Extracting search term'));
-
                 // Get custom extract search term prompt or use default
                 $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
                 
@@ -401,7 +476,6 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                 // Get Extracted Search Term prompt result
                 $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
-                Plugin_Logger::log(__('* Extracted search term: ' . $extracted_search_term));
 
                 // Get post IDs from request
                 $post_ids = null;
@@ -417,15 +491,25 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Get answer
-                Plugin_Logger::log(__('* Getting answer'));
                 $answer = $this->process_search_results($answer_prompt, $search_results, $search_query, $llm_provider);
-                Plugin_Logger::log(__('* Answer generated successfully'));
+                
+                // Log search results with referer URL
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Answer complete: ' . $search_query), 'info', [
+                    'answer' => $answer, 
+                    'extracted_search_term' => $extracted_search_term,
+                    'referer' => $referer
+                ]);
 
                 // Return answer
                 return new WP_REST_Response($answer, 200);
 
             } catch (Exception $e) {
-                Plugin_Logger::log(__('Error getting answer: ' . $e->getMessage()));
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Error getting answer: ' . $e->getMessage()), 'error', [
+                    'exception' => get_class($e),
+                    'referer' => $referer
+                ]);
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }
         
@@ -439,7 +523,8 @@ if (!class_exists('QuickSearchSummarizer')) {
             // Verify nonce
             $nonce = $request->get_header('X-WP-Nonce');
             if ( !wp_verify_nonce($nonce, 'wp_rest') ) {
-                Plugin_Logger::log(__('Invalid nonce ' . $nonce));
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Invalid nonce ' . $nonce), 'error', ['nonce' => $nonce, 'referer' => $referer]);
                 return false;
             }
 
@@ -458,7 +543,12 @@ if (!class_exists('QuickSearchSummarizer')) {
             $server_domain = $parsed_url['host'];
 
             if ($request_domain != $server_domain) {
-                Plugin_Logger::log(__('Cross Origin access forbidden'));
+                $referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'unknown';
+                treyworks_log(__('Cross Origin access forbidden'), 'error', [
+                    'request_domain' => $request_domain, 
+                    'server_domain' => $server_domain,
+                    'referer' => $referer
+                ]);
                 return false;
             }
 
@@ -470,9 +560,9 @@ if (!class_exists('QuickSearchSummarizer')) {
 
 
 // Initialize the plugin
-function quick_search_summarizer() {
+function treyworks_search() {
     return QuickSearchSummarizer::get_instance();
 }
 
 // Start the plugin
-quick_search_summarizer();
+treyworks_search();
