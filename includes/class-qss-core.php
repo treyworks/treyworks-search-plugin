@@ -6,7 +6,8 @@ if (!defined('ABSPATH')) {
 class QSS_Core {
     public function __construct() {
         add_action('init', array($this, 'init'));
-        add_shortcode('quick_search_summarizer', array($this, 'render_search_form'));
+        add_shortcode('treyworks_search', array($this, 'render_search_form'));
+        add_shortcode('treyworks_answer', array($this, 'render_question_form')); 
         add_action('wp_footer', array($this, 'render_modal'));
     }
 
@@ -17,22 +18,31 @@ class QSS_Core {
 
     public function render_search_form() {
         ob_start();
-        ?>
-        <form id="qss-search-form" class="qss-search-form">
-            <div class="qss-search-input-group">
-                <div class="qss-search-input-wrapper">
-                    <input type="text" id="qss-search-input" class="qss-search-input" placeholder="<?php echo esc_attr__('Enter your search query...', 'quick-search-summarizer'); ?>" required>
-                    <button type="button" class="qss-clear-button" aria-label="Clear search">&times;</button>
-                </div>
-                <button type="submit" class="qss-search-button"><?php echo esc_html__('Search', 'quick-search-summarizer'); ?></button>
-            </div>
-        </form>
-        <?php
+        include PLUGIN_DIR . 'templates/search-form.php';
+        return ob_get_clean();
+    }
+
+    public function render_question_form($atts) { 
+        // Extract attributes, specifically 'post_ids'
+        $atts = shortcode_atts(
+            array(
+                'post_ids' => '', // Default to empty string
+            ),
+            $atts,
+            'treyworks_answer'
+        );
+
+        // Sanitize the post_ids attribute (basic sanitation)
+        $post_ids = sanitize_text_field($atts['post_ids']);
+        
+        ob_start();
+        // Pass the post_ids to the template
+        include PLUGIN_DIR . 'templates/question-form.php';
         return ob_get_clean();
     }
 
     public function render_modal() {
-        include QSS_PLUGIN_DIR . 'templates/modal.php';
+        include PLUGIN_DIR . 'templates/modal.php';
     }
 
     public function enqueue_scripts() {
@@ -51,17 +61,17 @@ class QSS_Core {
         // Enqueue plugin CSS
         wp_enqueue_style(
             'qss-styles',
-            QSS_PLUGIN_URL . 'assets/css/quick-search-summarizer.css',
+            PLUGIN_URL . 'assets/css/treyworks-search.css',
             array(),
-            QSS_VERSION
+            PLUGIN_VERSION
         );
 
         // Enqueue plugin JavaScript
         wp_enqueue_script(
             'qss-script',
-            QSS_PLUGIN_URL . 'assets/js/quick-search-summarizer.js',
+            PLUGIN_URL . 'assets/js/treyworks-search.js',
             array('jquery', 'marked'),
-            QSS_VERSION,
+            PLUGIN_VERSION,
             true
         );
 
@@ -89,7 +99,8 @@ class QSS_Core {
                 'replaceWpSearch' => (bool) get_option('qss_plugin_replace_wp_search', false),
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('wp_rest'),
-                'rest_url' => esc_url_raw(rest_url('quick-search-summarizer/v1/search'))
+                'rest_url' => esc_url_raw(rest_url('treyworks-search/v1/search')),
+                'get_answer_url' => esc_url_raw(rest_url('treyworks-search/v1/get_answer'))
             )
         );
     }

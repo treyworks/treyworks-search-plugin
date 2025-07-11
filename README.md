@@ -1,10 +1,10 @@
-# Quick Search Summarizer
+# Treyworks Search Plugin
 
 A WordPress plugin that enhances your site's search functionality by providing AI-powered summaries of search results.
 
 ## Description
 
-Quick Search Summarizer is a powerful WordPress plugin that integrates with AI services (OpenAI or Google Gemini) to provide concise, relevant summaries of search results. This helps users quickly find the content they're looking for without having to click through multiple pages.
+Treyworks Search Plugin is a powerful WordPress plugin that integrates with AI services (OpenAI or Google Gemini) to provide concise, relevant summaries of search results. This helps users quickly find the content they're looking for without having to click through multiple pages.
 
 ### How It Works
 
@@ -24,27 +24,77 @@ Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summar
 - Customizable summary generation
 - Easy-to-use settings interface
 - Seamless integration with WordPress search
+- Optional search within custom field values
+- Comprehensive database logging system
+- Admin interface for monitoring and managing logs
 
 ## Installation
 
-1. Upload the `quick-search-summarizer` folder to the `/wp-content/plugins/` directory
+1. Upload the `treyworks-search` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Settings > Quick Search Summarizer to configure your API keys and preferences
+3. Go to Treyworks Search > Settings in your WordPress admin panel to configure your API keys and preferences
 
 ## Configuration
 
-1. Navigate to Settings > Quick Search Summarizer in your WordPress admin panel
+1. Navigate to Treyworks Search > Settings in your WordPress admin panel
 2. Enter your API key(s) for your preferred AI service (OpenAI or Google Gemini)
 3. Customize any additional settings as needed
 4. Save your changes
 
+### Logging Configuration
+
+1. In the Settings page, find the Logging Settings section
+2. Enable or disable logging as needed
+3. Set whether to delete the logs database table during plugin uninstall
+4. View, filter, and manage logs in the Treyworks Search > Logs admin page
+
+## Shortcodes
+
+Treyworks Search Plugin provides two shortcodes that you can use to integrate the search functionality into your posts, pages, or custom templates:
+
+### [treyworks_search]
+
+This shortcode displays a search form that allows users to enter a search query and get AI-powered summaries of the results.
+
+**Usage:**
+```
+[treyworks_search]
+```
+
+**Example:**
+```php
+<?php echo do_shortcode('[treyworks_search]'); ?>
+```
+
+### [treyworks_answer]
+
+This shortcode displays a question form that allows users to ask questions and get AI-generated answers. You can optionally limit the search to specific posts.
+
+**Usage:**
+```
+[treyworks_answer]
+```
+
+**Parameters:**
+- `post_ids` (optional): Comma-separated list of post IDs to limit the search to specific posts
+
+**Example with post_ids:**
+```
+[treyworks_answer post_ids="1,2,3,4"]
+```
+
+**Example in PHP:**
+```php
+<?php echo do_shortcode('[treyworks_answer post_ids="1,2,3,4"]'); ?>
+```
+
 ## API Integration
 
-Quick Search Summarizer provides an API endpoint for integrating with external applications. This allows you to leverage the plugin's AI-powered search and answer capabilities from other systems.
+Treyworks Search Plugin provides an API endpoint for integrating with external applications. This allows you to leverage the plugin's AI-powered search and answer capabilities from other systems.
 
 ### Setup
 
-1. Go to Settings > Quick Search Summarizer in your WordPress admin panel
+1. Go to Treyworks Search > Settings in your WordPress admin panel
 2. Generate an integration token using the "Generate New Token" button in the API Settings section
 3. Save your settings to store the generated token
 
@@ -53,7 +103,7 @@ Quick Search Summarizer provides an API endpoint for integrating with external a
 The plugin exposes the following endpoint:
 
 ```
-/wp-json/quick-search-summarizer/v1/get_answer
+/wp-json/treyworks-search/v1/get_answer
 ```
 
 ### Authentication
@@ -61,7 +111,7 @@ The plugin exposes the following endpoint:
 All API requests require the integration token to be included in the request headers:
 
 ```
-qss-integration-token: YOUR_INTEGRATION_TOKEN
+treyworks-search-token: YOUR_INTEGRATION_TOKEN
 ```
 
 ### Examples
@@ -70,9 +120,9 @@ qss-integration-token: YOUR_INTEGRATION_TOKEN
 
 ```bash
 curl -X POST \
-  "https://treyworks.local/wp-json/quick-search-summarizer/v1/get_answer" \
+  "https://treyworks.local/wp-json/treyworks-search/v1/get_answer" \
   -H "Content-Type: application/json" \
-  -H "qss-integration-token: YOUR_INTEGRATION_TOKEN" \
+  -H "treyworks-search-token: YOUR_INTEGRATION_TOKEN" \
   -d '{"search_query": "How do I use WordPress?"}'
 ```
 
@@ -80,9 +130,9 @@ curl -X POST \
 
 ```bash
 curl -X GET \
-  "https://your-site.com/wp-json/quick-search-summarizer/v1/get_answer?search_query=How%20do%20I%20use%20WordPress%3F" \
+  "https://your-site.com/wp-json/treyworks-search/v1/get_answer?search_query=How%20do%20I%20use%20WordPress%3F" \
   -H "Content-Type: application/json" \
-  -H "qss-integration-token: YOUR_INTEGRATION_TOKEN"
+  -H "treyworks-search-token: YOUR_INTEGRATION_TOKEN"
 ```
 
 ### Response
@@ -97,7 +147,7 @@ The endpoint returns a concise, structured response optimized for integration wi
 
 ## Support
 
-For support, feature requests, or bug reports, please visit our [support page](https://github.com/treyworks/quick-search-summarizer/issues).
+For support, feature requests, or bug reports, please visit our [support page](https://github.com/treyworks/treyworks-search/issues).
 
 ## License
 
@@ -107,7 +157,63 @@ This plugin is licensed under the GPL v2 or later.
 
 Developed by [Clarence Pearson](https://clarencepearson.com) and sponsored by [TreyWorks LLC](https://treyworks.com).
 
+## Admin Interface
+
+Treyworks Search Plugin provides a comprehensive admin interface accessible through the WordPress admin panel:
+
+- **Dashboard** (Treyworks Search): Overview of the plugin with quick links to settings and logs
+- **Settings** (Treyworks Search > Settings): Configure API keys, search options, and logging preferences
+- **Logs** (Treyworks Search > Logs): View, filter, and manage database logs
+
+## Logging System
+
+Treyworks Search comes with a powerful database logging system to help you monitor and troubleshoot your search functionality:
+
+### Log Features
+
+- Multiple log levels: info, warning, error, debug
+- Database-backed logging for persistence
+- Contextual data including referring URLs
+- Filtering by log level, date range, and search terms
+- Bulk and individual log deletion
+
+### Using Logs
+
+1. Enable logging in Treyworks Search > Settings
+2. Access logs through Treyworks Search > Logs in the admin panel
+3. Use filters to find specific log entries
+4. View detailed context data for each log entry (like search terms, results, etc.)
+
+### Developer Integration
+
+Developers can use the `treyworks_log()` function to add custom logs:
+
+```php
+treyworks_log($message, $level = 'info', $context = []);
+```
+
+Example:
+```php
+treyworks_log('Custom search processed', 'info', [
+    'query' => $search_query,
+    'results' => count($results)
+]);
+```
+
 ## Changelog
+
+### 1.3.0
+- Added custom field search capability
+- Added setting to toggle search in custom fields
+- Performance  optimizations for custom field search
+- Added filter hook for extending search content
+
+### 1.2.0
+- Added database logging system
+- Added admin interface for logs
+- Consolidated admin menus under "Treyworks Search"
+- Added referer URL tracking for API requests
+- Improved plugin initialization and error handling
 
 ### 1.0.4
 - Added API integration token

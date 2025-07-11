@@ -6,7 +6,7 @@
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'reference' => NULL,
-        'name' => 'quick-search-summarizer/wordpress-theme',
+        'name' => 'treyworks-search/wordpress-theme',
         'dev' => true,
     ),
     'versions' => array(
@@ -195,7 +195,7 @@
                 1 => '*',
             ),
         ),
-        'quick-search-summarizer/wordpress-theme' => array(
+        'treyworks-search/wordpress-theme' => array(
             'pretty_version' => '1.0.0',
             'version' => '1.0.0.0',
             'type' => 'wordpress-plugin',

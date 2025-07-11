@@ -12,6 +12,14 @@ jQuery(document).ready(function($) {
     const clearButtons = $('.qss-clear-button');
     const commonQuestions = $('#qss-common-questions');
     const dismissQuestionsBtn = $('.qss-dismiss-questions');
+    
+    // Question form elements
+    const questionForm = $('#qss-question-form');
+    const questionInput = $('#qss-question-input');
+    const answerContainer = $('#qss-answer-container');
+    const answerContent = $('.qss-answer-content');
+    const questionLoading = $('#qss-question-loading');
+    const clearFormButton = $('#qss-clear-form');
 
     // Check for search query parameter on page load if replace WP search is enabled
     if (qssConfig.replaceWpSearch) {
@@ -254,6 +262,87 @@ jQuery(document).ready(function($) {
             }
         });
     }
+
+    // Handle question form submission
+    $(document).on('submit', '#qss-question-form', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        const question = questionInput.val();
+        const postIds = $form.data('post-ids'); // Get post IDs from data attribute
+
+        // Basic validation
+        if (!question.trim()) {
+            alert('Please enter a question.');
+            return;
+        }
+
+        // Prepare data for AJAX request
+        const data = {
+            search_query: question,
+        };
+        
+        // Add post_ids to data if available
+        if (postIds) {
+            data.post_ids = postIds;
+        }
+
+        // Show loading indicator
+        questionLoading.show();
+        questionForm.hide();
+        answerContainer.hide();
+
+        // Make API call to the /get_answer endpoint
+        $.ajax({
+            url: qssConfig.get_answer_url, // Use the REST API endpoint URL
+            type: 'POST', 
+            headers: {
+                'X-WP-Nonce': qssConfig.nonce,
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data), 
+            success: function (response) {
+                // Hide loading indicator
+                questionLoading.hide();
+                
+                // Display answer
+                const parsedAnswer = marked.parse(response);
+                answerContent.html('<div class="qss-markdown">' + parsedAnswer + '</div>');
+                answerContainer.show();
+                questionForm.show();
+            },
+            error: function(xhr, status, error) {
+                questionLoading.hide();
+                
+                let errorMessage = 'An error occurred while processing your question.';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                answerContent.html(`<div class="qss-error">${errorMessage}</div>`);
+                answerContainer.show();
+                questionForm.show();
+                console.error('Question error:', error);
+            }
+        });
+    });
+    
+    // Handle clear form button click
+    clearFormButton.on('click', function() {
+        questionInput.val('').focus();
+        answerContainer.hide();
+    });
+    
+    // Handle clear button for question input
+    questionForm.find('.qss-clear-button').on('click', function() {
+        questionInput.val('').focus();
+    });
+
+    // Show/hide clear button for question input
+    questionInput.on('input', function() {
+        const clearButton = $(this).siblings('.qss-clear-button');
+        clearButton.css('opacity', this.value.length ? '1' : '0');
+    }).trigger('input');
 
     // Helper function to strip HTML tags
     function stripHtml(html) {
