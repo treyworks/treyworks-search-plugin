@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Gemini\Testing\Requests;
+namespace Gemini\Testing\FunctionCalls;
 
 use Gemini\Enums\ModelType;
 
-final class TestRequest
+final class TestFunctionCall
 {
     /**
      * @param  array<string, mixed>  $args
