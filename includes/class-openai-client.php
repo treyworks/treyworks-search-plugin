@@ -24,7 +24,12 @@ class QSS_OpenAI_Client {
         }
 
         try {
-            $this->client = OpenAI::client($api_key);
+            // $this->client = OpenAI::client($api_key);
+            $this->client = OpenAI::factory()
+                ->withApiKey($api_key)
+                ->withBaseUri('api.openai.com/v1') // default: api.openai.com/v1
+                ->withHttpClient($httpClient = new \GuzzleHttp\Client([])) // default: HTTP client found using PSR-18 HTTP Client Discovery
+                ->make();
             return $this->client;
         } catch (Exception $e) {
             Plugin_Logger::log('Error initializing OpenAI client: ' . $e->getMessage());
