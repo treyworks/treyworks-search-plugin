@@ -202,13 +202,11 @@ treyworks_log('Custom search processed', 'info', [
 
 ## Changelog
 
-### 1.3.0
+### 1.2.0
 - Added custom field search capability
 - Added setting to toggle search in custom fields
 - Performance  optimizations for custom field search
 - Added filter hook for extending search content
-
-### 1.2.0
 - Added database logging system
 - Added admin interface for logs
 - Consolidated admin menus under "Treyworks Search"

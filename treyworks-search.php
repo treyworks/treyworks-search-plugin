@@ -244,17 +244,22 @@ if (!class_exists('QuickSearchSummarizer')) {
          * Get prompt result using chosen LLM
          */
         private function get_prompt_result($system_prompt, $query, $llm_provider) {
+            
+            // Get LLM client
             $client = $this->get_llm_client($llm_provider);
 
+            // Get LLM model
+            $model = $this->settings->get_llm_model();
+            
             try {
                 if ($llm_provider === 'gemini') {
-                    $response = $client->geminiFlash()->generateContent(
+                    $response = $client->generativeModel(model: $model)->generateContent(
                         $system_prompt . '\n User query: ' . $query
                     );
                     return $response->text();
                 } else {
                     $response = $client->chat()->create([
-                        'model' => $this->settings->get_llm_model(),
+                        'model' => $model,
                         'messages' => [
                             [
                                 'role' => 'system',
@@ -262,7 +267,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                             ],
                             [
                                 'role' => 'user',
-                                'content' => $query
+                                'content' => 'User query: ' . $query
                             ]
                         ],
                         'temperature' => 0.7,
@@ -281,8 +286,10 @@ if (!class_exists('QuickSearchSummarizer')) {
          */
         private function process_search_results($system_prompt, $results, $query, $llm_provider) {
 
+            // Get LLM client and model
             $client = $this->get_llm_client($llm_provider);
-            
+            $model = $this->settings->get_llm_model();
+
             // Format results for the API
             $formatted_results = array_map(function($result) {
                 return array(
@@ -292,28 +299,32 @@ if (!class_exists('QuickSearchSummarizer')) {
                 );
             }, array_slice($results, 0, 5));
 
-            $input_content = json_encode([
+            // Encode results
+            $encoded_results = json_encode([
                 'query' => $query,
                 'results' => $formatted_results
             ]);
 
+            // Create prompt
+            $prompt = $system_prompt . '\nSearch results:\n' . $encoded_results;
+
             try {
                 if ($llm_provider === 'gemini') {
-                    $response = $client->geminiFlash()->generateContent(
-                        $system_prompt . '\nSearch results:\n' . $input_content
+                    $response = $client->generativeModel(model: $model)->generateContent(
+                        $prompt
                     );
                     return $response->text();
                 } else {
                     $response = $client->chat()->create([
-                        'model' => $this->settings->get_llm_model(),
+                        'model' => $model,
                         'messages' => [
                             [
                                 'role' => 'system',
-                                'content' => $system_prompt
+                                'content' => $prompt
                             ],
                             [
                                 'role' => 'user',
-                                'content' => $input_content
+                                'content' => 'User query: ' . $query
                             ]
                         ],
                         'temperature' => 0.7,
