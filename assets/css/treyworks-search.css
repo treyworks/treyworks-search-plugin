@@ -1,18 +1,96 @@
 /* Treyworks Search Styles */
 
+:root {
+    /* Base colors - not to be used directly in components */
+    --tw-search-color-primary: #555555;
+    --tw-search-color-primary-dark: #333333;
+    --tw-search-color-primary-light: #f5f5f5;
+    --tw-search-color-primary-border: #e0e0e0;
+    --tw-search-color-gray-dark: #333333;
+    --tw-search-color-gray-medium: #666666;
+    --tw-search-color-gray-light: #999999;
+    --tw-search-color-gray-lighter: #dddddd;
+    --tw-search-color-white: #ffffff;
+    --tw-search-color-background: #f8f8f8;
+    --tw-search-color-error: #cc3333;
+    --tw-search-color-error-light: #fff5f5;
+    
+    /* Component colors */
+    --tw-search-btn-bg: var(--tw-search-color-primary);
+    --tw-search-btn-hover-bg: var(--tw-search-color-primary-dark);
+    --tw-search-btn-text: var(--tw-search-color-white);
+    
+    --tw-search-input-border: var(--tw-search-color-gray-lighter);
+    --tw-search-input-bg: var(--tw-search-color-white);
+    
+    --tw-search-tag-bg: var(--tw-search-color-primary-light);
+    --tw-search-tag-border: var(--tw-search-color-primary-border);
+    --tw-search-tag-text: var(--tw-search-color-primary);
+    --tw-search-tag-active-bg: var(--tw-search-color-primary);
+    --tw-search-tag-active-text: var(--tw-search-color-white);
+    
+    --tw-search-modal-bg: var(--tw-search-color-white);
+    --tw-search-modal-header-bg: var(--tw-search-color-background);
+    --tw-search-modal-border: var(--tw-search-color-gray-lighter);
+    
+    --tw-search-text-primary: var(--tw-search-color-gray-dark);
+    --tw-search-text-secondary: var(--tw-search-color-gray-medium);
+    --tw-search-text-tertiary: var(--tw-search-color-gray-light);
+    
+    --tw-search-icon-color: var(--tw-search-color-gray-medium);
+    --tw-search-icon-hover-color: var(--tw-search-color-gray-dark);
+    
+    --tw-search-interactive-hover-bg: rgba(0, 0, 0, 0.03);
+    --tw-search-interactive-active-bg: rgba(0, 0, 0, 0.08);
+    --tw-search-shadow: rgba(0, 0, 0, 0.04);
+    --tw-search-focus-shadow: rgba(85, 85, 85, 0.2);
+    
+    --tw-search-alert-error-text: var(--tw-search-color-error);
+    --tw-search-alert-error-bg: var(--tw-search-color-error-light);
+    --tw-search-alert-error-border: var(--tw-search-color-error);
+    
+    /* Spacing */
+    --tw-search-spacing-xs: 4px;
+    --tw-search-spacing-sm: 8px;
+    --tw-search-spacing-md: 10px;
+    --tw-search-spacing-lg: 15px;
+    --tw-search-spacing-xl: 20px;
+    --tw-search-spacing-xxl: 30px;
+    
+    /* Border radius */
+    --tw-search-radius-small: 4px;
+    --tw-search-radius-medium: 8px;
+    --tw-search-radius-large: 20px;
+    --tw-search-radius-circle: 50%;
+    
+    /* Typography */
+    --tw-search-font-size-xs: 14px;
+    --tw-search-font-size-sm: 16px;
+    --tw-search-font-size-md: 18px;
+    --tw-search-font-size-lg: 1.5rem;
+    
+    /* Animations */
+    --tw-search-transition-fast: all 0.2s ease;
+    --tw-search-transition-normal: all 0.3s ease;
+    
+    /* Container sizes */
+    --tw-search-container-width: 800px;
+    --tw-search-modal-width: 1200px;
+}
+
 .qss-search-container {
-    max-width: 800px;
+    max-width: var(--tw-search-container-width);
     margin: 2em auto;
     padding: 1em;
 }
 
 .qss-search-form {
-    margin: 20px 0;
+    margin: var(--tw-search-spacing-xl) 0;
 }
 
 .qss-search-input-group {
     display: flex;
-    gap: 10px;
+    gap: var(--tw-search-spacing-md);
     align-items: stretch;
 }
 
@@ -25,21 +103,21 @@
 
 .qss-search-input {
     width: 100%;
-    padding: 10px;
-    padding-right: 20px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: var(--tw-search-spacing-md);
+    padding-right: var(--tw-search-spacing-xl);
+    font-size: var(--tw-search-font-size-sm);
+    border: 1px solid var(--tw-search-input-border);
+    border-radius: var(--tw-search-radius-small);
     margin-bottom: 0;
     height: 100%;
 }
 
 .qss-search-button {
     padding: 0.75rem;
-    background-color: #0073aa;
+    background-color: var(--tw-search-btn-bg);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--tw-search-radius-small);
     cursor: pointer;
     transition: background-color 0.3s;
     display: flex;
@@ -50,7 +128,7 @@
 }
 
 .qss-search-button:hover {
-    background-color: #005177;
+    background-color: var(--tw-search-btn-hover-bg);
 }
 
 .qss-search-icon {
@@ -60,12 +138,12 @@
 
 .qss-clear-button {
     position: absolute;
-    right: 20px;
+    right: var(--tw-search-spacing-xl);
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #666;
+    color: var(--tw-search-text-secondary);
     font-size: 20px;
     width: 24px;
     height: 24px;
@@ -75,38 +153,38 @@
     cursor: pointer;
     padding: 0;
     border-radius: 12px;
-    transition: all 0.2s ease;
+    transition: var(--tw-search-transition-fast);
     opacity: 0;
 }
 
 .qss-clear-button:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #333;
+    background-color: var(--tw-search-interactive-active-bg);
+    color: var(--tw-search-text-primary);
 }
 
 .qss-clear-button:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.3);
+    box-shadow: 0 0 0 2px var(--tw-search-focus-shadow);
 }
 
 .qss-clear-form-button {
     position: absolute;
-    right: 8px;
+    right: var(--tw-search-spacing-sm);
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #666;
-    font-size: 14px;
-    padding: 4px 8px;
+    color: var(--tw-search-text-secondary);
+    font-size: var(--tw-search-font-size-xs);
+    padding: var(--tw-search-spacing-xs) var(--tw-search-spacing-sm);
     cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    border-radius: var(--tw-search-radius-small);
+    transition: var(--tw-search-transition-fast);
 }
 
 .qss-clear-form-button:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #333;
+    background-color: var(--tw-search-interactive-active-bg);
+    color: var(--tw-search-text-primary);
 }
 
 .qss-form-actions {
@@ -118,18 +196,18 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 30px;
+    padding: var(--tw-search-spacing-xxl);
     text-align: center;
 }
 
 .qss-loader {
     border: 5px solid #f3f3f3;
-    border-top: 5px solid #0073aa;
-    border-radius: 50%;
+    border-top: 5px solid var(--tw-search-btn-bg);
+    border-radius: var(--tw-search-radius-circle);
     width: 40px;
     height: 40px;
     animation: qss-spin 1s linear infinite;
-    margin-bottom: 15px;
+    margin-bottom: var(--tw-search-spacing-lg);
 }
 
 @keyframes qss-spin {
@@ -139,8 +217,8 @@
 
 /* Common Questions Styles */
 .qss-common-questions {
-    margin-top: 15px;
-    padding: 10px 0;
+    margin-top: var(--tw-search-spacing-lg);
+    padding: var(--tw-search-spacing-md) 0;
     transition: opacity 0.3s ease, max-height 0.3s ease;
     max-height: 300px;
     overflow: hidden;
@@ -159,55 +237,55 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: var(--tw-search-spacing-sm);
 }
 
 .qss-common-questions-title {
-    font-size: 14px;
+    font-size: var(--tw-search-font-size-xs);
     font-weight: 600;
-    color: #666;
+    color: var(--tw-search-text-secondary);
 }
 
 .qss-dismiss-questions {
     background: none;
     border: none;
-    color: #999;
+    color: var(--tw-search-text-tertiary);
     cursor: pointer;
-    padding: 4px;
+    padding: var(--tw-search-spacing-xs);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: var(--tw-search-radius-circle);
     width: 24px;
     height: 24px;
-    transition: all 0.2s ease;
+    transition: var(--tw-search-transition-fast);
 }
 
 .qss-dismiss-questions:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #666;
+    background-color: var(--tw-search-interactive-hover-bg);
+    color: var(--tw-search-text-secondary);
 }
 
 .qss-dismiss-questions:active {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--tw-search-interactive-active-bg);
 }
 
 .qss-common-questions-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--tw-search-spacing-sm);
 }
 
 .qss-common-question {
-    background-color: #f0f7ff;
-    color: #0073aa;
-    border: 1px solid #d0e8ff;
-    border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 14px;
+    background-color: var(--tw-search-tag-bg);
+    color: var(--tw-search-tag-text);
+    border: 1px solid var(--tw-search-tag-border);
+    border-radius: var(--tw-search-radius-large);
+    padding: var(--tw-search-spacing-sm) var(--tw-search-spacing-xl);
+    font-size: var(--tw-search-font-size-xs);
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: var(--tw-search-transition-fast);
+    box-shadow: 0 1px 2px var(--tw-search-shadow);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -215,17 +293,17 @@
 
 .qss-common-question:hover {
     background-color: #e0f0ff;
-    border-color: #0073aa;
-    box-shadow: 0 2px 4px rgba(0, 115, 170, 0.2);
+    border-color: var(--tw-search-btn-bg);
+    box-shadow: 0 2px 4px var(--tw-search-focus-shadow);
     transform: translateY(-1px);
 }
 
 .qss-common-question:active, 
 .qss-common-question.clicked {
-    background-color: #0073aa;
-    color: white;
+    background-color: var(--tw-search-btn-bg);
+    color: var(--tw-search-btn-text);
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px var(--tw-search-interactive-active-bg);
 }
 
 /* Modal Styles */
@@ -250,19 +328,19 @@
 
 .qss-modal-content {
     position: relative;
-    background-color: #fff;
+    background-color: var(--tw-search-modal-bg);
     margin: 0;
     padding: 0;
     width: 90%;
-    max-width: 1200px;
+    max-width: var(--tw-search-modal-width);
     max-height: 90vh;
-    border-radius: 8px;
+    border-radius: var(--tw-search-radius-medium);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.33);
     overflow-y: auto;
     transform-style: preserve-3d;
     opacity: 0;
     transform: translateZ(600px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: var(--tw-search-transition-normal), transform 0.3s ease;
 }
 
 .qss-modal.active .qss-modal-content {
@@ -288,22 +366,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
-    background: #f8f9fa;
+    border-bottom: 1px solid var(--tw-search-modal-border);
+    background: var(--tw-search-modal-header-bg);
 }
 
 .qss-modal-title {
     margin: 0;
-    font-size: 1.5rem;
-    color: #333;
+    font-size: var(--tw-search-font-size-lg);
+    color: var(--tw-search-text-primary);
     font-weight: 600;
 }
 
 .qss-close-modal {
     background: none;
     border: none;
-    font-size: 1.5rem;
-    color: #666;
+    font-size: var(--tw-search-font-size-lg);
+    color: var(--tw-search-text-secondary);
     cursor: pointer;
     padding: 0.5rem;
     width: 40px;
@@ -311,21 +389,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: var(--tw-search-radius-circle);
     transition: background-color 0.2s ease;
 }
 
 .qss-close-modal:hover {
     background-color: #eee;
-    color: #333;
+    color: var(--tw-search-text-primary);
 }
 
 .qss-modal-search-container {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--tw-search-modal-border);
     position: sticky;
     top: 0;
-    background: #fff;
+    background: var(--tw-search-modal-bg);
 }
 
 .qss-modal-search {
@@ -346,23 +424,23 @@
 }
 
 .qss-sidebar {
-    border-left: 1px solid #ddd;
-    padding-left: 20px;
+    border-left: 1px solid var(--tw-search-modal-border);
+    padding-left: var(--tw-search-spacing-xl);
 }
 
 /* Question Form Styles */
 .qss-question-container {
-    max-width: 800px;
+    max-width: var(--tw-search-container-width);
 }
 
 /* Answer Container Styles */
 .qss-answer-container {
-    padding: 20px;
+    padding: var(--tw-search-spacing-xl);
     max-height: 400px;
     overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f8f9fa;
+    border: 1px solid var(--tw-search-input-border);
+    border-radius: var(--tw-search-radius-small);
+    background-color: var(--tw-search-modal-header-bg);
 }
 
 .qss-answer-content {
@@ -372,30 +450,30 @@
 .qss-answer-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 15px;
+    margin-top: var(--tw-search-spacing-lg);
 }
 
 .qss-reset-button {
-    background-color: #0073aa;
-    color: white;
+    background-color: var(--tw-search-btn-bg);
+    color: var(--tw-search-btn-text);
     border: none;
-    border-radius: 4px;
-    padding: 10px 15px;
+    border-radius: var(--tw-search-radius-small);
+    padding: var(--tw-search-spacing-md) var(--tw-search-spacing-lg);
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
 .qss-reset-button:hover {
-    background-color: #005177;
+    background-color: var(--tw-search-btn-hover-bg);
 }
 
 /* Error message */
 .qss-error {
-    color: #dc3232;
-    padding: 10px;
-    background-color: #fdf2f2;
-    border-left: 4px solid #dc3232;
-    margin-bottom: 20px;
+    color: var(--tw-search-alert-error-text);
+    padding: var(--tw-search-spacing-md);
+    background-color: var(--tw-search-alert-error-bg);
+    border-left: 4px solid var(--tw-search-alert-error-border);
+    margin-bottom: var(--tw-search-spacing-xl);
 }
 
 /* Content styles */

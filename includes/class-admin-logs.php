@@ -76,7 +76,7 @@ class Admin_Logs {
         
         // Get current filters and pagination
         $page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-        $per_page = 20;
+        $per_page = 10;
         $level = isset($_GET['level']) ? sanitize_text_field($_GET['level']) : '';
         $date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : '';
         $date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';

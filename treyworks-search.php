@@ -120,7 +120,8 @@ if (!class_exists('QuickSearchSummarizer')) {
             require_once PLUGIN_DIR . '/includes/class-admin-logs.php';
             require_once PLUGIN_DIR . '/includes/class-settings.php';
             require_once PLUGIN_DIR . '/includes/class-qss-prompts.php';
-            require_once PLUGIN_DIR . 'includes/class-qss-settings.php';
+            require_once PLUGIN_DIR . '/includes/class-qss-settings.php';
+            require_once PLUGIN_DIR . '/includes/class-custom-field-search.php';
             require_once PLUGIN_DIR . 'includes/class-qss-core.php';
             require_once PLUGIN_DIR . '/includes/class-openai-client.php';
             require_once PLUGIN_DIR . '/includes/class-gemini-client.php';
@@ -142,6 +143,11 @@ if (!class_exists('QuickSearchSummarizer')) {
             
             if (class_exists('DB_Logger')) {
                 DB_Logger::initialize(); // Initialize database logger
+            }
+            
+            // Initialize custom field search functionality
+            if (class_exists('QSS_Custom_Field_Search')) {
+                new QSS_Custom_Field_Search();
             }
         }
 
@@ -182,6 +188,10 @@ if (!class_exists('QuickSearchSummarizer')) {
 
                         // Get post content
                         $content = wp_strip_all_tags(get_the_content());
+                        
+                        // Allow plugins to modify the content (e.g., add custom fields)
+                        $content = apply_filters('qss_pre_ai_content', $content, get_the_ID());
+                        
                         $search_results[] = array(
                             'title' => get_the_title(),
                             'content' => $content,

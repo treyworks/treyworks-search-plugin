@@ -120,6 +120,13 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => array($this, 'sanitize_post_types'),
                 'default' => array('post', 'page')
             ),
+            'search_custom_fields' => array(
+                'label' => __('Search Custom Fields', 'qss-plugin'),
+                'type' => 'checkbox',
+                'description' => __('Include post custom field values in search queries. This may increase search time but provides more comprehensive results.', 'qss-plugin'),
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => false
+            ),
             'llm_provider' => array(
                 'label' => __('AI Model Provider', 'qss-plugin'),
                 'type' => 'select',
@@ -279,7 +286,7 @@ class QSS_Plugin_Settings {
         foreach ($this->get_settings_fields() as $key => $field) {
             if (in_array($key, ['modal_title', 'replace_wp_search', 'enable_logging', 'search_input_placeholder', 'common_questions'])) {
                 $section = 'qss_plugin_general_section';
-            } elseif ($key === 'searchable_post_types') {
+            } elseif (in_array($key, ['searchable_post_types', 'search_custom_fields'])) {
                 $section = 'qss_plugin_search_section';
             } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key', 'llm_model'])) {
                 $section = 'qss_plugin_api_section';
