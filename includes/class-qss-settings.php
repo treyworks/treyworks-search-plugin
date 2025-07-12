@@ -65,10 +65,23 @@ class QSS_Plugin_Settings {
     }
 
     /**
-     * Get LLM Model name from settings
+     * Get LLM Model name from settings based on provider
+     * @param string $provider Optional provider override
+     * @return string The model name for the selected provider
      */
-    public function get_llm_model() {
-        return get_option('qss_plugin_llm_model');
+    public function get_llm_model($provider = null) {
+        // If no provider is specified, get it from the settings
+        if (empty($provider)) {
+            $provider = get_option('qss_plugin_llm_provider', 'openai');
+        }
+        
+        // Return the appropriate model based on the provider
+        if ($provider === 'gemini') {
+            return get_option('qss_plugin_gemini_model', 'gemini-2.5-flash');
+        } else {
+            // Default to OpenAI
+            return get_option('qss_plugin_openai_model', 'gpt-4.1');
+        }
     }
 
     /**
@@ -138,12 +151,32 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => 'openai'
             ),
-            'llm_model' => array(
-                'label' => __('LLM Model Name', 'qss-plugin'),
-                'type' => 'text',
-                'description' => __('Name of the model to use with the selected provider.', 'qss-plugin'),
+            'openai_model' => array(
+                'label' => __('OpenAI Model', 'qss-plugin'),
+                'type' => 'select',
+                'options' => array(
+                    'gpt-4.1' => __('GPT-4.1', 'qss-plugin'),
+                    'gpt-4.1-mini' => __('GPT-4.1 Mini', 'qss-plugin'),
+                    'gpt-4o' => __('GPT-4o', 'qss-plugin'),
+                    'gpt-4o-mini' => __('GPT-4o Mini', 'qss-plugin')
+                ),
+                'description' => __('Select the OpenAI model to use.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_text_field',
-                'default' => 'gpt-4'
+                'default' => 'gpt-4.1',
+                'condition' => array('llm_provider', 'openai')
+            ),
+            'gemini_model' => array(
+                'label' => __('Gemini Model', 'qss-plugin'),
+                'type' => 'select',
+                'options' => array(
+                    'gemini-2.5-flash' => __('Gemini 2.5 Flash', 'qss-plugin'),
+                    'gemini-2.0-flash' => __('Gemini 2.0 Flash', 'qss-plugin'),
+                    'gemini-2.0-flash-lite' => __('Gemini 2.0 Flash Lite', 'qss-plugin')
+                ),
+                'description' => __('Select the Gemini model to use.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'gemini-2.5-flash',
+                'condition' => array('llm_provider', 'gemini')
             ),
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
@@ -284,18 +317,19 @@ class QSS_Plugin_Settings {
 
         // Add fields
         foreach ($this->get_settings_fields() as $key => $field) {
+            // Determine section for the field
             if (in_array($key, ['modal_title', 'replace_wp_search', 'enable_logging', 'search_input_placeholder', 'common_questions'])) {
                 $section = 'qss_plugin_general_section';
             } elseif (in_array($key, ['searchable_post_types', 'search_custom_fields'])) {
                 $section = 'qss_plugin_search_section';
-            } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key', 'llm_model'])) {
+            } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key', 'openai_model', 'gemini_model'])) {
                 $section = 'qss_plugin_api_section';
             } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt', 'get_answer_prompt'])) {
                 $section = 'qss_plugin_prompts_section';
             } else {
                 $section = 'qss_plugin_settings_section';
             }
-
+            
             add_settings_field(
                 'qss_plugin_' . $key,
                 $field['label'],
