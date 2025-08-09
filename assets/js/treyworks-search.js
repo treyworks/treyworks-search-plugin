@@ -221,14 +221,11 @@ jQuery(document).ready(function($) {
                 // Display summary if available
                 if (response.summary) {
                     const parsedSummary = marked.parse(response.summary);
-                    summaryContainer.html('<h3>Summary</h3><div class="qss-markdown">' + parsedSummary + '</div>');
+                    summaryContainer.html('<div class="qss-markdown">' + parsedSummary + '</div>');
                 }
 
                 // Display results and collect sources
                 if (response.results && response.results.length > 0) {
-                    // Add sources list header
-                    sourcesList.append(`<h3>Sources</h3>`);
-                    
                     for (let i = 0; i < response.results.length; i++) {
                         const result = response.results[i];
                         const truncatedContent = truncateText(stripHtml(result.content), 200);
