@@ -23,12 +23,12 @@
     --tw-search-input-border: var(--tw-search-color-gray-lighter);
     --tw-search-input-bg: var(--tw-search-color-white);
     
+    --tw-search-tag-color: var(--tw-search-color-primary);
+    --tw-search-tag-hover-color: var(--tw-search-color-white);
     --tw-search-tag-bg: var(--tw-search-color-primary-light);
+    --tw-search-tag-hover-bg: var(--tw-search-color-primary-dark);
     --tw-search-tag-border: var(--tw-search-color-primary-border);
-    --tw-search-tag-text: var(--tw-search-color-primary);
-    --tw-search-tag-active-bg: var(--tw-search-color-primary);
-    --tw-search-tag-active-text: var(--tw-search-color-white);
-    
+
     --tw-search-modal-bg: var(--tw-search-color-white);
     --tw-search-modal-header-bg: var(--tw-search-color-background);
     --tw-search-modal-border: var(--tw-search-color-gray-lighter);
@@ -68,6 +68,7 @@
     --tw-search-font-size-sm: 16px;
     --tw-search-font-size-md: 18px;
     --tw-search-font-size-lg: 1.5rem;
+    --tw-search-citation-font-weight: 600;
     
     /* Animations */
     --tw-search-transition-fast: all 0.2s ease;
@@ -192,6 +193,7 @@
 }
 
 .qss-loading {
+    color: var(--tw-search-text-primary);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -278,7 +280,7 @@
 
 .qss-common-question {
     background-color: var(--tw-search-tag-bg);
-    color: var(--tw-search-tag-text);
+    color: var(--tw-search-tag-color);
     border: 1px solid var(--tw-search-tag-border);
     border-radius: var(--tw-search-radius-large);
     padding: var(--tw-search-spacing-sm) var(--tw-search-spacing-xl);
@@ -292,7 +294,8 @@
 }
 
 .qss-common-question:hover {
-    background-color: #e0f0ff;
+    color: var(--tw-search-tag-hover-color);
+    background-color: var(--tw-search-tag-hover-bg);
     border-color: var(--tw-search-btn-bg);
     box-shadow: 0 2px 4px var(--tw-search-focus-shadow);
     transform: translateY(-1px);
@@ -617,6 +620,10 @@
 .qss-markdown pre code {
     background-color: transparent;
     padding: 0;
+}
+
+.qss-markdown a {
+    font-weight: var(--tw-search-citation-font-weight);
 }
 
 /* Responsive styles */

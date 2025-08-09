@@ -24,7 +24,6 @@ Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summar
 - Customizable summary generation
 - Easy-to-use settings interface
 - Seamless integration with WordPress search
-- Optional search within custom field values
 - Comprehensive database logging system
 - Admin interface for monitoring and managing logs
 
@@ -202,11 +201,11 @@ treyworks_log('Custom search processed', 'info', [
 
 ## Changelog
 
+### 1.2.1
+- Added LLM model selection for extraction and generative prompts
+- Rollback custom fields hooks for further performance optimization
+
 ### 1.2.0
-- Added custom field search capability
-- Added setting to toggle search in custom fields
-- Performance  optimizations for custom field search
-- Added filter hook for extending search content
 - Added database logging system
 - Added admin interface for logs
 - Consolidated admin menus under "Treyworks Search"

@@ -118,7 +118,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             require_once PLUGIN_DIR . '/includes/class-logger.php'; // Keep for backward compatibility
             require_once PLUGIN_DIR . '/includes/class-db-logger.php';
             require_once PLUGIN_DIR . '/includes/class-admin-logs.php';
-            require_once PLUGIN_DIR . '/includes/class-settings.php';
+            // require_once PLUGIN_DIR . '/includes/class-settings.php';
             require_once PLUGIN_DIR . '/includes/class-qss-prompts.php';
             require_once PLUGIN_DIR . '/includes/class-qss-settings.php';
             require_once PLUGIN_DIR . '/includes/class-custom-field-search.php';
@@ -143,11 +143,6 @@ if (!class_exists('QuickSearchSummarizer')) {
             
             if (class_exists('DB_Logger')) {
                 DB_Logger::initialize(); // Initialize database logger
-            }
-            
-            // Initialize custom field search functionality
-            if (class_exists('QSS_Custom_Field_Search')) {
-                new QSS_Custom_Field_Search();
             }
         }
 
@@ -249,7 +244,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             $client = $this->get_llm_client($llm_provider);
 
             // Get LLM model
-            $model = $this->settings->get_llm_model();
+            $model = $this->settings->get_llm_model($llm_provider, 'generative');
             
             try {
                 if ($llm_provider === 'gemini') {
@@ -269,9 +264,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                                 'role' => 'user',
                                 'content' => 'User query: ' . $query
                             ]
-                        ],
-                        'temperature' => 0.7,
-                        'max_tokens' => 100
+                        ]
                     ]);
                     return $response->choices[0]->message->content;
                 }
@@ -288,7 +281,7 @@ if (!class_exists('QuickSearchSummarizer')) {
 
             // Get LLM client and model
             $client = $this->get_llm_client($llm_provider);
-            $model = $this->settings->get_llm_model();
+            $model = $this->settings->get_llm_model($llm_provider, 'extraction');
 
             // Format results for the API
             $formatted_results = array_map(function($result) {
@@ -326,9 +319,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                                 'role' => 'user',
                                 'content' => 'User query: ' . $query
                             ]
-                        ],
-                        'temperature' => 0.7,
-                        'max_tokens' => 1000
+                        ]
                     ]);
                     return $response->choices[0]->message->content;
                 }
