@@ -3,7 +3,7 @@
  * Plugin Name: Treyworks Search for WordPress
  * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -86,7 +86,7 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function define_constants() {
-            define('PLUGIN_VERSION', '1.2.1');
+            define('PLUGIN_VERSION', '1.2.2');
             define('PLUGIN_DIR', plugin_dir_path(__FILE__));
             define('PLUGIN_URL', plugin_dir_url(__FILE__));
         }
@@ -304,7 +304,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             try {
                 if ($llm_provider === 'gemini') {
                     $response = $client->generativeModel(model: $model)->generateContent(
-                        $prompt
+                        $prompt . '\n\nUser query: ' . $query
                     );
                     return $response->text();
                 } else {
