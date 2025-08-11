@@ -201,6 +201,10 @@ treyworks_log('Custom search processed', 'info', [
 
 ## Changelog
 
+### 1.2.2
+- Added support for GPT-5 models
+- Fix: Added user query to Gemini API call
+
 ### 1.2.1
 - Added LLM model selection for extraction and generative prompts
 - Rollback custom fields hooks for further performance optimization
