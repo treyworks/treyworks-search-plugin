@@ -25,20 +25,16 @@ class QSS_Plugin_Settings {
     private function __construct() {
         // Initialize model arrays
         self::$openai_models = array(
+            'gpt-5.1' => __('GPT-5.1', 'qss-plugin'),
             'gpt-5-mini-2025-08-07' => __('GPT-5 Mini', 'qss-plugin'),
-            'gpt-5-nano-2025-08-07' => __('GPT-5 Nano', 'qss-plugin'),
-            'o3-2025-04-16' => __('o3', 'qss-plugin'),
-            'o3-mini-2025-01-31' => __('o3 Mini', 'qss-plugin'),
             'gpt-4.1' => __('GPT-4.1', 'qss-plugin'),
             'gpt-4.1-mini' => __('GPT-4.1 Mini', 'qss-plugin'),
-            'gpt-4o' => __('GPT-4o', 'qss-plugin'),
-            'gpt-4o-mini' => __('GPT-4o Mini', 'qss-plugin')
         );
         
         self::$gemini_models = array(
+            // 'gemini-3-pro-preview' => __('Gemini 3 Pro Preview', 'qss-plugin'),
+            'gemini-2.5-pro' => __('Gemini 2.5 Pro', 'qss-plugin'),
             'gemini-2.5-flash' => __('Gemini 2.5 Flash', 'qss-plugin'),
-            'gemini-2.0-flash' => __('Gemini 2.0 Flash', 'qss-plugin'),
-            'gemini-2.0-flash-lite' => __('Gemini 2.0 Flash Lite', 'qss-plugin')
         );
         
         add_action('admin_menu', [$this, 'add_options_page']);

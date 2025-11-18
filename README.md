@@ -201,6 +201,10 @@ treyworks_log('Custom search processed', 'info', [
 
 ## Changelog
 
+### 1.2.3
+- Added support for GPT-5.1
+- Removed legacy models (o3, 4o, and Gemini 2.0)
+
 ### 1.2.2
 - Added support for GPT-5 models
 - Fix: Added user query to Gemini API call
