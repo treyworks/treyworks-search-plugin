@@ -3,7 +3,7 @@
  * Plugin Name: Treyworks Search for WordPress
  * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.2.2
+ * Version: 1.2.3
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
