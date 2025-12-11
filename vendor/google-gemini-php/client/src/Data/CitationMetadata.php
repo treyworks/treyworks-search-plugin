@@ -9,7 +9,7 @@ use Gemini\Contracts\Arrayable;
 /**
  * A collection of source attributions for a piece of content.
  *
- * https://ai.google.dev/api/rest/v1/GenerateContentResponse#citationmetadata
+ * https://ai.google.dev/api/generate-content#citationmetadata
  */
 final class CitationMetadata implements Arrayable
 {
@@ -21,17 +21,15 @@ final class CitationMetadata implements Arrayable
     ) {}
 
     /**
-     * @param  array{ citationSources: array{ array{ startIndex: int, endIndex: int, uri: ?string, license: ?string } } }  $attributes
+     * @param  array{ citationSources?: array{ array{ startIndex: int, endIndex: int, uri: ?string, license: ?string } } }  $attributes
      */
     public static function from(array $attributes): self
     {
-        $citationSources = array_map(
-            static fn (array $source): CitationSource => CitationSource::from($source),
-            $attributes['citationSources'],
-        );
-
         return new self(
-            citationSources: $citationSources
+            citationSources: array_map(
+                static fn (array $source): CitationSource => CitationSource::from($source),
+                $attributes['citationSources'] ?? [],
+            )
         );
     }
 

@@ -20,12 +20,12 @@
             'dev_requirement' => false,
         ),
         'google-gemini-php/client' => array(
-            'pretty_version' => '1.0.15',
-            'version' => '1.0.15.0',
+            'pretty_version' => '2.7.1',
+            'version' => '2.7.1.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../google-gemini-php/client',
             'aliases' => array(),
-            'reference' => '6dca9a5e6a6de39b230fe4593a8d041efd02e34e',
+            'reference' => '2bbd86ad919b81892445a3c0d5d3ed70d230bcb4',
             'dev_requirement' => false,
         ),
         'guzzlehttp/guzzle' => array(
@@ -72,12 +72,12 @@
             ),
         ),
         'php-http/client-common' => array(
-            'pretty_version' => '2.7.2',
-            'version' => '2.7.2.0',
+            'pretty_version' => '2.7.3',
+            'version' => '2.7.3.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../php-http/client-common',
             'aliases' => array(),
-            'reference' => '0cfe9858ab9d3b213041b947c881d5b19ceeca46',
+            'reference' => 'dcc6de29c90dd74faab55f71b79d89409c4bf0c1',
             'dev_requirement' => false,
         ),
         'php-http/client-implementation' => array(
@@ -214,12 +214,12 @@
             'dev_requirement' => false,
         ),
         'symfony/options-resolver' => array(
-            'pretty_version' => 'v6.4.25',
-            'version' => '6.4.25.0',
+            'pretty_version' => 'v6.4.30',
+            'version' => '6.4.30.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/options-resolver',
             'aliases' => array(),
-            'reference' => 'd28e7e2db8a73e9511df892d36445f61314bbebe',
+            'reference' => 'eeaa8cabe54c7b3516938c72a4a161c0cc80a34f',
             'dev_requirement' => false,
         ),
         'symfony/polyfill-php80' => array(

@@ -7,7 +7,7 @@ namespace Gemini\Enums;
 /**
  * The IANA standard MIME type of the source data.
  *
- * https://ai.google.dev/api/rest/v1/Content#blob
+ * https://ai.google.dev/api/rest/v1beta/Content#blob
  */
 enum MimeType: string
 {
@@ -25,6 +25,7 @@ enum MimeType: string
     case AUDIO_AAC = 'audio/aac';
     case AUDIO_OGG = 'audio/ogg';
     case AUDIO_FLAC = 'audio/flac';
+    case AUDIO_L16_PCM_RATE_24000 = 'audio/L16;codec=pcm;rate=24000';
 
     // Video
     case VIDEO_MP4 = 'video/mp4';
