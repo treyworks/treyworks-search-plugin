@@ -42,3 +42,6 @@ phpunit.xml
 phpcs.xml
 .phpcs.xml
 .phpunit.result.cache
+
+# Dev plans
+/plans/

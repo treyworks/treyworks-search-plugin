@@ -20,12 +20,12 @@
             'dev_requirement' => false,
         ),
         'google-gemini-php/client' => array(
-            'pretty_version' => '2.7.1',
-            'version' => '2.7.1.0',
+            'pretty_version' => '2.7.3',
+            'version' => '2.7.3.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../google-gemini-php/client',
             'aliases' => array(),
-            'reference' => '2bbd86ad919b81892445a3c0d5d3ed70d230bcb4',
+            'reference' => '1391adf5206a17a642571ceff88e660280551726',
             'dev_requirement' => false,
         ),
         'guzzlehttp/guzzle' => array(

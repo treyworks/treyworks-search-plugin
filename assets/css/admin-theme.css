@@ -1,0 +1,571 @@
+/**
+ * Treyworks Admin Theme
+ * Based on Treyworks Brand Guidelines
+ */
+
+:root {
+    /* Primary Blues */
+    --tw-blue: #042236;
+    --tw-blue-light: #0a3e5f;
+    --tw-blue-lighter: #105a8a;
+    --tw-blue-dark: #021624;
+    --tw-blue-darker: #010b12;
+
+    /* Secondary Greens */
+    --tw-green: #275c4d;
+    --tw-green-light: #347d69;
+    --tw-green-lighter: #419e85;
+    --tw-green-dark: #1a3d33;
+    --tw-green-darker: #0d1e19;
+
+    /* Light Blues */
+    --tw-light-blue: #052b43;
+    --tw-light-blue-light: #0a4a73;
+    --tw-light-blue-lighter: #0f69a3;
+    --tw-light-blue-dark: #031c2c;
+    --tw-light-blue-darker: #010e16;
+
+    /* Orange Accents */
+    --tw-orange: #aa5c0e;
+    --tw-orange-light: #d27311;
+    --tw-orange-lighter: #fa8a14;
+    --tw-orange-dark: #824609;
+    --tw-orange-darker: #5a3106;
+
+    /* Neutrals */
+    --tw-cream: #d9d2a4;
+    --tw-off-white: #faf6ee;
+    --tw-red: #a83235;
+    --tw-light: #f0f0f0;
+    --tw-dark: #000000;
+}
+
+/* Typography */
+.treyworks-admin {
+    font-family: "Work Sans", sans-serif;
+    color: var(--tw-blue);
+    background-color: #f0f0f1; /* WP Admin default bg match or custom */
+}
+
+.treyworks-admin h1,
+.treyworks-admin h2,
+.treyworks-admin h3,
+.treyworks-admin h4,
+.treyworks-admin h5,
+.treyworks-admin h6 {
+    font-family: "Merriweather", serif;
+    color: var(--tw-blue);
+}
+
+/* Header */
+.treyworks-header {
+    background-color: var(--tw-blue);
+    background-image: linear-gradient(135deg,var(--tw-blue) 0%,var(--tw-green) 100%);
+    color: white;
+    padding: 20px 30px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.treyworks-header h1 {
+    color: white;
+    margin: 0 0 5px 0;
+    font-size: 32px;
+    font-weight: 400;
+}
+
+.treyworks-header .subtitle {
+    font-family: "Work Sans", sans-serif;
+    font-size: 14px;
+    color: #fff;
+    padding-left: 0;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.treyworks-header-logo img {
+    height: 40px;
+    width: auto;
+}
+
+/* Notices */
+.treyworks-header .notice {
+    background-color: #ffffff21;
+    border-radius: 6px;
+    border-left: 3px solid var(--tw-off-white);
+    border-color: var(--tw-off-white) !important;
+    color: var(--tw-off-white);
+}
+
+/* Tabs / Navigation */
+.treyworks-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.treyworks-nav-item {
+    padding: 10px 20px;
+    text-decoration: none;
+    color: var(--tw-blue);
+    font-weight: 600;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.treyworks-nav-item:hover {
+    background: var(--tw-off-white);
+    color: var(--tw-blue-light);
+    border-color: #ccc;
+}
+
+.treyworks-nav-item.active {
+    background: white;
+    color: var(--tw-green);
+    border: 2px solid var(--tw-green);
+    /* Double border effect: Green Border > White Gap > Content */
+    box-shadow: inset 0 0 0 2px #fff; 
+    /* Compensate for 2px border (vs 1px default) */
+    padding: 9px 19px;
+}
+
+/* Content Container */
+.treyworks-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    max-width: 1200px;
+}
+
+/* Form Styles */
+.treyworks-admin input[type="text"],
+.treyworks-admin input[type="password"],
+.treyworks-admin input[type="email"],
+.treyworks-admin input[type="number"],
+.treyworks-admin textarea,
+.treyworks-admin select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: "Work Sans", sans-serif;
+}
+
+.treyworks-admin input:focus,
+.treyworks-admin textarea:focus,
+.treyworks-admin select:focus {
+    border-color: var(--tw-blue);
+    box-shadow: 0 0 0 1px var(--tw-blue);
+    outline: none;
+}
+
+/* Buttons */
+.treyworks-admin .button-primary {
+    background-color: var(--tw-green) !important;
+    border-color: var(--tw-green-dark) !important;
+    color: white !important;
+    padding: 5px 20px !important;
+    border-radius: 4px !important;
+    transition: background-color 0.2s ease;
+    font-weight: 600;
+}
+
+.treyworks-admin .button-primary:hover {
+    background-color: var(--tw-green-light) !important;
+    border-color: var(--tw-green) !important;
+}
+
+.treyworks-admin .button-secondary {
+    color: var(--tw-blue) !important;
+    border-color: var(--tw-blue) !important;
+}
+
+.treyworks-admin .button-secondary:hover {
+    color: var(--tw-blue-light) !important;
+    border-color: var(--tw-blue-light) !important;
+    background: var(--tw-off-white) !important;
+}
+
+/* Sections */
+.treyworks-section {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.treyworks-section:last-child {
+    border-bottom: none;
+}
+
+.treyworks-section h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--tw-green);
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+/* Logs Table Overrides */
+.tablenav {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-content: center;
+    margin-bottom: 25px;
+}
+
+.tablenav form {
+    display: flex;
+    justify-content: space-around;
+}
+
+.tablenav br.clear {
+    display: none;
+}
+
+.wp-list-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+    background: transparent;
+}
+
+.wp-list-table thead th, .wp-list-table thead td {
+    background-color: transparent;
+    color: #8898aa;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 10px;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.wp-list-table thead th a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.wp-list-table thead th a:hover {
+    color: var(--tw-blue);
+}
+
+.wp-list-table tbody tr td,
+.wp-list-table tbody tr th {
+    padding: 15px 10px;
+    vertical-align: middle;
+    color: #525f7f;
+    font-size: 13px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.wp-list-table tbody tr:last-child td,
+.wp-list-table tbody tr:last-child th {
+    border-bottom: none;
+}
+
+.wp-list-table tbody tr:nth-child(odd) {
+    background-color: transparent;
+}
+
+.wp-list-table tbody tr:nth-child(even) {
+    background-color: transparent;
+}
+
+.wp-list-table tbody tr:hover {
+    background-color: #f6f9fc;
+}
+
+/* Checkbox Column Fix */
+.wp-list-table .check-column {
+    padding: 15px 0 0 10px !important;
+    width: 2.2em;
+}
+
+.wp-list-table .column-actions {
+    text-align: right;
+}
+
+
+/* Status Labels */
+.log-level {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.log-level-error { background: #fee2e2; color: #991b1b; }
+.log-level-warning { background: #fef3c7; color: #92400e; }
+.log-level-info { background: #dbeafe; color: #1e40af; }
+.log-level-debug { background: #f3f4f6; color: #374151; }
+
+/* Settings Form Grid */
+.form-table th {
+    font-weight: 600;
+    color: var(--tw-blue);
+}
+
+.description {
+    color: #666;
+    font-style: italic;
+}
+
+/* Password Fields */
+.password-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.password-field input {
+    min-width: 300px;
+}
+
+.password-field .qss-reveal-api-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    width: 30px;
+    padding: 0 !important;
+}
+
+
+/* Modal Styles */
+.treyworks-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.treyworks-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.treyworks-modal-content {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    z-index: 100001;
+}
+
+.treyworks-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--tw-blue);
+    border-radius: 8px 8px 0 0;
+}
+
+.treyworks-modal-header h2 {
+    margin: 0;
+    color: white;
+    font-size: 20px;
+    border: none;
+    padding: 0;
+}
+
+.treyworks-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.treyworks-modal-close:hover {
+    opacity: 1;
+}
+
+.treyworks-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.treyworks-modal-body pre {
+    background: #1e1e1e;
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #d4d4d4;
+    overflow-x: auto;
+}
+
+/* JSON Syntax Highlighting */
+.treyworks-modal-body pre .json-key {
+    color: #9cdcfe;
+    font-weight: 500;
+}
+
+.treyworks-modal-body pre .json-string {
+    color: #ce9178;
+}
+
+.treyworks-modal-body pre .json-number {
+    color: #b5cea8;
+}
+
+.treyworks-modal-body pre .json-boolean {
+    color: #569cd6;
+    font-weight: 600;
+}
+
+.treyworks-modal-body pre .json-null {
+    color: #569cd6;
+    font-style: italic;
+}
+
+/* Dashboard Styles */
+.treyworks-dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 0;
+}
+
+.treyworks-admin-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.treyworks-admin-card-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e5e5e5;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.treyworks-admin-card-header h2 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    color: var(--tw-blue);
+}
+
+.treyworks-admin-card-header h2 .dashicons {
+    margin-right: 10px;
+    color: var(--tw-green);
+}
+
+.treyworks-admin-card-body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.treyworks-admin-card-body p {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.treyworks-dashboard-stats {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #eee;
+}
+
+@media screen and (max-width: 782px) {
+    .treyworks-dashboard-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Chart Card Styles */
+.treyworks-chart-card {
+    margin-bottom: 20px;
+}
+
+.treyworks-chart-container {
+    position: relative;
+    height: 400px;
+    padding: 20px 10px 10px;
+}
+
+.treyworks-chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 15px 0 10px;
+    flex-wrap: wrap;
+}
+
+.treyworks-chart-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+}
+
+.treyworks-chart-legend .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+@media screen and (max-width: 782px) {
+    .treyworks-chart-container {
+        height: 300px;
+    }
+    
+    .treyworks-chart-legend {
+        gap: 15px;
+    }
+}

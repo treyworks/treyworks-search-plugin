@@ -25,6 +25,7 @@ class QSS_Plugin_Settings {
     private function __construct() {
         // Initialize model arrays
         self::$openai_models = array(
+            'gpt-5.2' => __('GPT-5.2', 'qss-plugin'),
             'gpt-5.1' => __('GPT-5.1', 'qss-plugin'),
             'gpt-5-mini-2025-08-07' => __('GPT-5 Mini', 'qss-plugin'),
             'gpt-4.1' => __('GPT-4.1', 'qss-plugin'),
@@ -32,7 +33,7 @@ class QSS_Plugin_Settings {
         );
         
         self::$gemini_models = array(
-            // 'gemini-3-pro-preview' => __('Gemini 3 Pro Preview', 'qss-plugin'),
+            'gemini-3-flash-preview' => __('Gemini 3 Flash Preview', 'qss-plugin'),
             'gemini-2.5-pro' => __('Gemini 2.5 Pro', 'qss-plugin'),
             'gemini-2.5-flash' => __('Gemini 2.5 Flash', 'qss-plugin'),
         );
@@ -50,6 +51,22 @@ class QSS_Plugin_Settings {
             return;
         }
 
+        // Enqueue Google Fonts
+        wp_enqueue_style(
+            'treyworks-fonts', 
+            'https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Work+Sans:wght@300;400;500;600&display=swap', 
+            array(), 
+            null
+        );
+
+        // Enqueue Admin Theme
+        wp_enqueue_style(
+            'treyworks-admin-theme', 
+            PLUGIN_URL . 'assets/css/admin-theme.css', 
+            array(), 
+            PLUGIN_VERSION
+        );
+
         wp_enqueue_script(
             'qss-admin',
             PLUGIN_URL . 'assets/js/admin.js',
@@ -57,6 +74,10 @@ class QSS_Plugin_Settings {
             PLUGIN_VERSION,
             true
         );
+        
+        // Enqueue API-specific assets for copy button functionality
+        wp_enqueue_style('treyworks-search-admin-api', PLUGIN_URL . 'assets/css/admin-api.css', array(), PLUGIN_VERSION);
+        wp_enqueue_script('treyworks-search-admin-api', PLUGIN_URL . 'assets/js/admin-api.js', array('jquery'), PLUGIN_VERSION, true);
     }
 
     /**
@@ -164,6 +185,13 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'rest_sanitize_boolean',
                 'default' => false
             ),
+            'max_search_results' => array(
+                'label' => __('Max Search Results', 'qss-plugin'),
+                'type' => 'number',
+                'description' => __('Maximum number of search results to return and process. Higher values provide more context but may increase processing time.', 'qss-plugin'),
+                'sanitize_callback' => 'absint',
+                'default' => 10
+            ),
             'llm_provider' => array(
                 'label' => __('AI Model Provider', 'qss-plugin'),
                 'type' => 'select',
@@ -214,21 +242,21 @@ class QSS_Plugin_Settings {
             'openai_api_key' => array(
                 'label' => __('OpenAI API Key', 'qss-plugin'),
                 'type' => 'text',
-                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_openai_api_key" value="' . esc_attr(get_option('qss_plugin_openai_api_key')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button></div>',
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_openai_api_key" value="' . esc_attr(get_option('qss_plugin_openai_api_key')) . '" /><button type="button" class="button qss-reveal-api-key"><span class="dashicons dashicons-visibility"></span></button></div>',
                 'sanitize_callback' => 'sanitize_text_field',
                 'condition' => array('llm_provider', 'openai')
             ),
             'gemini_api_key' => array(
                 'label' => __('Google Gemini API Key', 'qss-plugin'),
                 'type' => 'text',
-                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_gemini_api_key" value="' . esc_attr(get_option('qss_plugin_gemini_api_key')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button></div>',
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_gemini_api_key" value="' . esc_attr(get_option('qss_plugin_gemini_api_key')) . '" /><button type="button" class="button qss-reveal-api-key"><span class="dashicons dashicons-visibility"></span></button></div>',
                 'sanitize_callback' => 'sanitize_text_field',
                 'condition' => array('llm_provider', 'gemini')
             ),
             'integration_token' => array(
                 'label' => __('REST API Integration Token', 'qss-plugin'),
                 'type' => 'text',
-                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_integration_token" value="' . esc_attr(get_option('qss_plugin_integration_token')) . '" /><button type="button" class="button qss-reveal-api-key">Reveal</button><button type="button" class="button button-secondary qss-generate-token">Generate New Token</button></div>',
+                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_integration_token" value="' . esc_attr(get_option('qss_plugin_integration_token')) . '" /><button type="button" class="button qss-reveal-api-key"><span class="dashicons dashicons-visibility"></span></button><button type="button" class="button button-secondary qss-generate-token">Generate New Token</button></div>',
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => ''
             ),
@@ -255,6 +283,28 @@ class QSS_Plugin_Settings {
                 'description' => __('System prompt for generating answers to user questions based on search results.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_textarea_field',
                 'default' => QSS_Default_Prompts::GET_ANSWER
+            ),
+            'enable_trusted_domains' => array(
+                'label' => __('Enable Trusted Domains', 'qss-plugin'),
+                'type' => 'checkbox',
+                'description' => __('Only allow requests from trusted domains. When enabled, requests from domains not in the trusted list will be blocked.', 'qss-plugin'),
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default' => false
+            ),
+            'trusted_domains' => array(
+                'label' => __('Trusted Domains', 'qss-plugin'),
+                'type' => 'textarea',
+                'rows' => 8,
+                'description' => __('Enter one domain per line (e.g., example.com, api.example.com). Do not include http:// or https://. Your WordPress domain is automatically trusted.', 'qss-plugin'),
+                'sanitize_callback' => 'sanitize_textarea_field',
+                'default' => ''
+            ),
+            'api_endpoints_display' => array(
+                'label' => __('API Endpoints', 'qss-plugin'),
+                'type' => 'custom',
+                'description' => '',
+                'sanitize_callback' => null,
+                'default' => ''
             )
         );
     }
@@ -347,18 +397,28 @@ class QSS_Plugin_Settings {
             function() { echo '<p>' . __('Customize system prompts for search and summarization.', 'qss-plugin') . '</p>'; },
             'qss-plugin-settings'
         );
+        
+        // REST API Security Section
+        add_settings_section(
+            'qss_plugin_rest_api_section',
+            __('REST API Security', 'qss-plugin'),
+            array($this, 'rest_api_section_callback'),
+            'qss-plugin-settings'
+        );
 
         // Add fields
         foreach ($this->get_settings_fields() as $key => $field) {
             // Determine section for the field
             if (in_array($key, ['modal_title', 'replace_wp_search', 'enable_logging', 'search_input_placeholder', 'common_questions'])) {
                 $section = 'qss_plugin_general_section';
-            } elseif (in_array($key, ['searchable_post_types', 'search_custom_fields'])) {
+            } elseif (in_array($key, ['searchable_post_types', 'search_custom_fields', 'search_acf_groups', 'max_search_results'])) {
                 $section = 'qss_plugin_search_section';
             } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key', 'openai_extraction_model', 'openai_generative_model', 'gemini_extraction_model', 'gemini_generative_model'])) {
                 $section = 'qss_plugin_api_section';
             } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt', 'get_answer_prompt'])) {
                 $section = 'qss_plugin_prompts_section';
+            } elseif (in_array($key, ['enable_trusted_domains', 'trusted_domains', 'api_endpoints_display'])) {
+                $section = 'qss_plugin_rest_api_section';
             } else {
                 $section = 'qss_plugin_settings_section';
             }
@@ -396,6 +456,27 @@ class QSS_Plugin_Settings {
      */
     public function post_types_section_callback() {
         echo '<p>' . __('Select the post types to include in the search query.', 'qss-plugin') . '</p>';
+    }
+    
+    /**
+     * REST API section callback
+     */
+    public function rest_api_section_callback() {
+        $site_url = get_bloginfo('url');
+        $parsed_url = parse_url($site_url);
+        $current_domain = $parsed_url['host'];
+        ?>
+        <p><?php _e('Control which domains are allowed to send requests to your REST API endpoints.', 'qss-plugin'); ?></p>
+        <div class="notice notice-info inline" style="margin: 1rem 0;">
+            <p>
+                <strong><?php _e('Note:', 'qss-plugin'); ?></strong> 
+                <?php printf(
+                    __('Your WordPress domain (<code>%s</code>) is always allowed to access these endpoints, regardless of the settings below.', 'qss-plugin'),
+                    esc_html($current_domain)
+                ); ?>
+            </p>
+        </div>
+        <?php
     }
 
     /**
@@ -440,6 +521,15 @@ class QSS_Plugin_Settings {
                     checked(1, $value, false)
                 );
                 break;
+            
+            case 'number':
+                printf(
+                    '<input type="number" class="regular-text" id="qss_plugin_%s" name="qss_plugin_%s" value="%s" min="1" step="1" />',
+                    esc_attr($key),
+                    esc_attr($key),
+                    esc_attr($value)
+                );
+                break;
                 
             case 'textarea':
                 $rows = isset($field['rows']) ? intval($field['rows']) : 5;
@@ -480,6 +570,12 @@ class QSS_Plugin_Settings {
                 echo '</div>';
                 break;
             
+            case 'custom':
+                if ($key === 'api_endpoints_display') {
+                    $this->render_api_endpoints();
+                }
+                break;
+            
             default:
                 if (strpos($field['description'], '<div class="password-field">') !== false) {
                     echo $field['description'];
@@ -503,6 +599,44 @@ class QSS_Plugin_Settings {
         }
     }
 
+    /**
+     * Render API endpoints display
+     */
+    private function render_api_endpoints() {
+        $rest_base = rest_url('treyworks-search/v1');
+        $search_endpoint = $rest_base . '/search';
+        $ask_endpoint = $rest_base . '/get_answer';
+        ?>
+        <div class="treyworks-api-endpoints-display">
+            <div class="treyworks-endpoint-section">
+                <h4 style="margin-top: 0;"><?php _e('Search Endpoint', 'qss-plugin'); ?></h4>
+                <div class="treyworks-endpoint-url">
+                    <code><?php echo esc_html($search_endpoint); ?></code>
+                    <button type="button" class="button button-small copy-endpoint" data-endpoint="<?php echo esc_attr($search_endpoint); ?>">
+                        <?php _e('Copy', 'qss-plugin'); ?>
+                    </button>
+                </div>
+                <p class="description">
+                    <?php _e('POST request to search your site and get AI-generated summaries.', 'qss-plugin'); ?>
+                </p>
+            </div>
+            
+            <div class="treyworks-endpoint-section">
+                <h4><?php _e('Ask Endpoint', 'qss-plugin'); ?></h4>
+                <div class="treyworks-endpoint-url">
+                    <code><?php echo esc_html($ask_endpoint); ?></code>
+                    <button type="button" class="button button-small copy-endpoint" data-endpoint="<?php echo esc_attr($ask_endpoint); ?>">
+                        <?php _e('Copy', 'qss-plugin'); ?>
+                    </button>
+                </div>
+                <p class="description">
+                    <?php _e('POST request to get direct answers to questions based on your site content.', 'qss-plugin'); ?>
+                </p>
+            </div>
+        </div>
+        <?php
+    }
+    
     /**
      * Render options page
      */

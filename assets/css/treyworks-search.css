@@ -508,9 +508,10 @@
 }
 
 .qss-sources-wrapper {
-    border: 1px solid #ddd;
-    border-radius: 4px;
     margin-top: 2rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .qss-sources-toggle {
@@ -518,24 +519,25 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     background: #f8f9fa;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #333;
     transition: background-color 0.2s ease;
+    text-align: left;
 }
 
 .qss-sources-toggle:hover {
-    background-color: #e9ecef;
+    background-color: #f0f2f5;
 }
 
 .qss-chevron {
-    fill: currentColor;
+    fill: #666;
     transition: transform 0.2s ease;
+    min-width: 24px;
 }
 
 .qss-sources-toggle[aria-expanded="true"] .qss-chevron {
@@ -543,16 +545,22 @@
 }
 
 .qss-sources-list {
-    padding: 1rem;
-    border-top: 1px solid #ddd;
+    padding: 0;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
 }
 
 .qss-source-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #eee;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s ease;
+}
+
+.qss-source-item:hover {
+    background-color: #fafafa;
 }
 
 .qss-source-item:last-child {
@@ -560,26 +568,31 @@
 }
 
 .qss-source-number {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f8f9fa;
-    border-radius: 50%;
-    font-size: 0.875rem;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: #666;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .qss-source-item a {
-    color: #0073aa;
+    color: #333;
     text-decoration: none;
     flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .qss-source-item a:hover {
-    color: #005177;
-    text-decoration: underline;
+    color: #0073aa;
+    text-decoration: none;
 }
 
 /* Markdown content styles */

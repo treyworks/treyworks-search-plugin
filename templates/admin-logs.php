@@ -5,7 +5,9 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="wrap treyworks-search-logs">
-    <h1><?php _e('Treyworks Search Logs', 'treyworks-search'); ?></h1>
+    <?php require_once PLUGIN_DIR . 'templates/admin-header.php'; ?>
+    
+    <div class="treyworks-content">
     
     <!-- Filters -->
     <div class="tablenav top">
@@ -103,17 +105,13 @@ if (!defined('ABSPATH')) {
                                 <div class="log-message">
                                     <?php echo esc_html($log->message); ?>
                                 </div>
-                                <?php if (!empty($log->context)): ?>
-                                    <button type="button" class="toggle-context button-link"><?php _e('Show Context', 'treyworks-search'); ?></button>
-                                    <div class="log-context" style="display: none;">
-                                        <pre><?php echo esc_html(json_encode($log->context, JSON_PRETTY_PRINT)); ?></pre>
-                                    </div>
-                                <?php endif; ?>
                             </td>
                             <td class="column-actions">
-                                <button type="button" class="button-link delete-log" data-id="<?php echo esc_attr($log->id); ?>">
-                                    <?php _e('Delete', 'treyworks-search'); ?>
-                                </button>
+                                <?php if (!empty($log->context)): ?>
+                                    <button type="button" class="view-context button button-secondary button-small" data-context="<?php echo esc_attr(json_encode($log->context)); ?>">
+                                        <?php _e('View Context', 'treyworks-search'); ?>
+                                    </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -176,4 +174,18 @@ if (!defined('ABSPATH')) {
             </div>
         </div>
     <?php endif; ?>
+
+    <!-- Context Modal -->
+    <div id="context-modal" class="treyworks-modal" style="display: none;">
+        <div class="treyworks-modal-overlay"></div>
+        <div class="treyworks-modal-content">
+            <div class="treyworks-modal-header">
+                <h2><?php _e('Log Context', 'treyworks-search'); ?></h2>
+                <button type="button" class="treyworks-modal-close">&times;</button>
+            </div>
+            <div class="treyworks-modal-body">
+                <pre id="context-data"></pre>
+            </div>
+        </div>
+    </div>
 </div>

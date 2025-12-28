@@ -1,33 +1,54 @@
 jQuery(document).ready(function($) {
     // Handle conditional fields visibility
     function updateConditionalFields() {
-        const llmProvider = $('#qss_plugin_llm_provider').val();
-        
         $('.qss-conditional-field').each(function() {
             const $field = $(this);
             const dependsOn = $field.data('depends-on');
             const dependsValue = $field.data('depends-value');
             
-            if (dependsOn === 'llm_provider') {
-                $field.toggle(llmProvider === dependsValue);
+            // Find the dependency input
+            // Try ID first (standard settings API)
+            let $dependency = $('#qss_plugin_' + dependsOn);
+            
+            // If not found by ID, it might be a checkbox without that specific ID or handled differently
+            if ($dependency.length === 0) {
+                $dependency = $('[name="qss_plugin_' + dependsOn + '"]');
+            }
+            
+            if ($dependency.length > 0) {
+                let currentValue;
+                
+                if ($dependency.is(':checkbox')) {
+                    currentValue = $dependency.is(':checked') ? '1' : '0';
+                } else {
+                    currentValue = $dependency.val();
+                }
+                
+                // Compare values (convert both to strings for loose comparison)
+                $field.toggle(String(currentValue) === String(dependsValue));
             }
         });
     }
 
-    // Update fields on load and when provider changes
-    $('#qss_plugin_llm_provider').on('change', updateConditionalFields);
+    // Update fields on load
     updateConditionalFields();
+    
+    // Bind change events to all potential dependencies
+    // We bind to any input that matches the pattern qss_plugin_*
+    $('select[id^="qss_plugin_"], input[id^="qss_plugin_"]').on('change', updateConditionalFields);
 
     // Handle reveal button functionality
     $('.qss-reveal-api-key').on('click', function() {
         var inputField = $(this).siblings('.qss-api-key-field');
         var inputType = inputField.attr('type');
+        var icon = $(this).find('.dashicons');
+        
         if (inputType === 'password') {
             inputField.attr('type', 'text');
-            $(this).text('Hide');
+            icon.removeClass('dashicons-visibility').addClass('dashicons-hidden');
         } else {
             inputField.attr('type', 'password');
-            $(this).text('Reveal');
+            icon.removeClass('dashicons-hidden').addClass('dashicons-visibility');
         }
     });
     

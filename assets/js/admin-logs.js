@@ -8,26 +8,69 @@
     // DOM ready
     $(function() {
         const $logsTable = $('.treyworks-search-logs');
+        const $modal = $('#context-modal');
+        const $modalContent = $('#context-data');
         
-        // Toggle context visibility
-        $logsTable.on('click', '.toggle-context', function() {
-            const $button = $(this);
-            const $context = $button.next('.log-context');
+        // Open modal
+        $logsTable.on('click', '.view-context', function(e) {
+            e.preventDefault();
+            const contextData = $(this).data('context');
             
-            $context.slideToggle(200);
+            // Format JSON for display with syntax highlighting
+            try {
+                // If it's already an object, use it directly, otherwise parse it
+                const jsonObject = typeof contextData === 'string' ? JSON.parse(contextData) : contextData;
+                const formattedJson = syntaxHighlightJSON(jsonObject);
+                $modalContent.html(formattedJson);
+            } catch (e) {
+                $modalContent.text(contextData);
+            }
             
-            if ($button.text() === treyworksSearchLogs.showContext) {
-                $button.text(treyworksSearchLogs.hideContext);
-            } else {
-                $button.text(treyworksSearchLogs.showContext);
+            $modal.fadeIn(200);
+            $('body').css('overflow', 'hidden'); // Prevent background scrolling
+        });
+        
+        /**
+         * Syntax highlight JSON
+         */
+        function syntaxHighlightJSON(json) {
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, null, 2);
+            }
+            
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+        
+        // Close modal
+        $('.treyworks-modal-close, .treyworks-modal-overlay').on('click', function() {
+            $modal.fadeOut(200);
+            $('body').css('overflow', '');
+        });
+        
+        // Close on Escape key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $modal.is(':visible')) {
+                $modal.fadeOut(200);
+                $('body').css('overflow', '');
             }
         });
         
-        // Delete single log
-        $logsTable.on('click', '.delete-log', function() {
-            const logId = $(this).data('id');
-            deleteLogs([logId]);
-        });
         
         // Delete selected logs
         $('#delete-selected-logs').on('click', function() {

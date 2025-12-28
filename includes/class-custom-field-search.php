@@ -158,17 +158,107 @@ class QSS_Custom_Field_Search {
             return $content;
         }
         
-        // Get post meta
-        $post_meta = get_post_meta($post_id);
-        if (empty($post_meta)) {
-            return $content;
+        $meta_content = '';
+        
+        // Use ACF specific logic if available and configured
+        if (function_exists('acf_get_field_groups')) {
+            $selected_groups = get_option('qss_plugin_search_acf_groups', array());
+            
+            if (!empty($selected_groups)) {
+                $meta_content = $this->get_acf_content($post_id, $selected_groups);
+            }
         }
         
-        // Get meta keys to search
-        $meta_keys = $this->get_meta_keys_to_search();
+        // Fallback to raw meta if no ACF content found or ACF not active
+        if (empty($meta_content)) {
+            $meta_content = $this->get_raw_meta_content($post_id);
+        }
         
-        // Add meta values to content for AI analysis
+        // Append meta content
+        if (!empty($meta_content)) {
+            $content .= "\n\nCustom Field Content:\n" . $meta_content;
+        }
+        
+        return $content;
+    }
+
+    /**
+     * Get content from ACF fields
+     */
+    private function get_acf_content($post_id, $selected_groups) {
+        $content = '';
+        
+        // Get all field groups for this post
+        $post_groups = acf_get_field_groups(array('post_id' => $post_id));
+        
+        foreach ($post_groups as $group) {
+            // Skip if this group is not in our selected list
+            if (!in_array($group['key'], $selected_groups)) {
+                continue;
+            }
+            
+            // Get fields for this group
+            $fields = acf_get_fields($group['key']);
+            
+            if ($fields) {
+                foreach ($fields as $field) {
+                    $value = get_field($field['name'], $post_id);
+                    
+                    if ($value) {
+                        // Handle different field types
+                        $formatted_value = $this->format_acf_value($value, $field);
+                        
+                        if ($formatted_value) {
+                            $content .= "\n" . $field['label'] . ": " . $formatted_value;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return $content;
+    }
+
+    /**
+     * Format ACF value based on type
+     */
+    private function format_acf_value($value, $field) {
+        if (is_string($value)) {
+            return strip_tags($value);
+        }
+        
+        if (is_array($value)) {
+            // Handle array values (like checkboxes, selects, or relationships)
+            // Flatten simplified arrays
+            $flat_values = array();
+            array_walk_recursive($value, function($a) use (&$flat_values) { 
+                if (is_string($a) || is_numeric($a)) {
+                    $flat_values[] = $a; 
+                }
+            });
+            return implode(', ', $flat_values);
+        }
+        
+        if (is_object($value)) {
+            // Try to convert object to string if possible, or skip
+            return method_exists($value, '__toString') ? (string) $value : '';
+        }
+        
+        return (string) $value;
+    }
+
+    /**
+     * Get content from raw post meta (fallback)
+     */
+    private function get_raw_meta_content($post_id) {
+        $post_meta = get_post_meta($post_id);
+        if (empty($post_meta)) {
+            return '';
+        }
+        
+        $meta_keys = $this->get_meta_keys_to_search();
         $meta_content = '';
+        
         foreach ($post_meta as $key => $values) {
             // Skip if we're only searching specific meta keys and this key isn't in the list
             if (!empty($meta_keys) && !in_array($key, $meta_keys)) {
@@ -183,17 +273,12 @@ class QSS_Custom_Field_Search {
             foreach ($values as $value) {
                 // Only include string values, not serialized data
                 if (is_string($value) && !is_serialized($value)) {
-                    $meta_content .= "\n" . $value;
+                    $meta_content .= "\n" . $key . ": " . $value;
                 }
             }
         }
         
-        // Append meta content
-        if (!empty($meta_content)) {
-            $content .= "\n\nCustom Field Content:\n" . $meta_content;
-        }
-        
-        return $content;
+        return $meta_content;
     }
 
     /**
@@ -231,14 +316,23 @@ class QSS_Custom_Field_Search {
      * @return array Meta keys to search, empty array for all
      */
     private function get_meta_keys_to_search() {
-        // This could be expanded to use a setting for specifying which meta keys to search
         $meta_keys = array();
         
-        // For future enhancement, you can add a setting like:
-        // $meta_keys_setting = get_option('qss_plugin_search_custom_fields_keys', '');
-        // if (!empty($meta_keys_setting)) {
-        //     $meta_keys = array_map('trim', explode(',', $meta_keys_setting));
-        // }
+        // Get selected ACF groups
+        if (function_exists('acf_get_fields')) {
+            $selected_groups = get_option('qss_plugin_search_acf_groups', array());
+            
+            if (!empty($selected_groups)) {
+                foreach ($selected_groups as $group_key) {
+                    $fields = acf_get_fields($group_key);
+                    if ($fields) {
+                        foreach ($fields as $field) {
+                            $meta_keys[] = $field['name'];
+                        }
+                    }
+                }
+            }
+        }
         
         return $meta_keys;
     }

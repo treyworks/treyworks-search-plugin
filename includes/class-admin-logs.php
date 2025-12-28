@@ -49,7 +49,32 @@ class Admin_Logs {
     public static function enqueue_scripts($hook) {
         // Load shared admin styles on all plugin pages
         if (strpos($hook, 'treyworks-search') !== false || $hook === 'toplevel_page_treyworks-search') {
+            // Enqueue Google Fonts
+            wp_enqueue_style(
+                'treyworks-fonts', 
+                'https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Work+Sans:wght@300;400;500;600&display=swap', 
+                array(), 
+                null
+            );
+
+            // Enqueue Admin Theme
+            wp_enqueue_style(
+                'treyworks-admin-theme', 
+                PLUGIN_URL . 'assets/css/admin-theme.css', 
+                array(), 
+                PLUGIN_VERSION
+            );
+            
             wp_enqueue_style('treyworks-search-admin', PLUGIN_URL . 'assets/css/admin-logs.css', array(), PLUGIN_VERSION);
+        }
+        
+        // Load dashboard-specific scripts on the dashboard page
+        if ('toplevel_page_treyworks-search' === $hook) {
+            wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js', array(), '4.4.0', true);
+            wp_enqueue_script('treyworks-search-admin-dashboard', PLUGIN_URL . 'assets/js/admin-dashboard.js', array('jquery', 'chartjs'), PLUGIN_VERSION, true);
+            
+            $activity_data = DB_Logger::get_30_day_activity();
+            wp_localize_script('treyworks-search-admin-dashboard', 'treyworksActivityData', $activity_data);
         }
         
         // Load logs-specific scripts only on the logs page
@@ -62,6 +87,12 @@ class Admin_Logs {
                 'confirmDelete' => __('Are you sure you want to delete the selected logs?', 'treyworks-search'),
                 'confirmDeleteAll' => __('Are you sure you want to delete ALL logs? This cannot be undone.', 'treyworks-search')
             ));
+        }
+        
+        // Load API-specific scripts on the Settings page
+        if ('treyworks-search_page_treyworks-search-settings' === $hook) {
+            wp_enqueue_style('treyworks-search-admin-api', PLUGIN_URL . 'assets/css/admin-api.css', array(), PLUGIN_VERSION);
+            wp_enqueue_script('treyworks-search-admin-api', PLUGIN_URL . 'assets/js/admin-api.js', array('jquery'), PLUGIN_VERSION, true);
         }
     }
     
