@@ -1,0 +1,64 @@
+/**
+ * Admin API CSS
+ */
+
+.treyworks-api-settings .treyworks-admin-card {
+    margin-bottom: 2rem;
+}
+
+.treyworks-endpoint-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.treyworks-endpoint-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.treyworks-endpoint-section h3 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #042236;
+}
+
+.treyworks-endpoint-url {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+}
+
+.treyworks-endpoint-url code {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #275c4d;
+    background: transparent;
+    padding: 0;
+}
+
+.treyworks-endpoint-url .button {
+    flex-shrink: 0;
+}
+
+.treyworks-api-settings .form-table th {
+    width: 200px;
+    padding: 1.5rem 0.75rem 1.5rem 0;
+}
+
+.treyworks-api-settings .form-table td {
+    padding: 1.5rem 0.75rem;
+}
+
+.treyworks-api-settings textarea.large-text {
+    width: 100%;
+    max-width: 600px;
+}

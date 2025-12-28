@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Gemini\Enums;
 
 /**
- * Specifies what was the reason why prompt was blocked.
+ * Specifies the reason why the prompt was blocked.
  *
- * https://ai.google.dev/api/rest/v1/GenerateContentResponse#blockreason
+ * https://ai.google.dev/api/generate-content#BlockReason
  */
 enum BlockReason: string
 {
+    /**
+     * The blocked reason is unspecified.
+     */
+    case BLOCKED_REASON_UNSPECIFIED = 'BLOCKED_REASON_UNSPECIFIED';
+
     /**
      * Default value. This value is unused.
      */
@@ -35,4 +40,19 @@ enum BlockReason: string
      * Prompt was blocked due to prohibited content.
      */
     case PROHIBITED_CONTENT = 'PROHIBITED_CONTENT';
+
+    /**
+     * Candidates blocked due to unsafe image generation content.
+     */
+    case IMAGE_SAFETY = 'IMAGE_SAFETY';
+
+    /**
+     * The prompt was blocked by Model Armor.
+     */
+    case MODEL_ARMOR = 'MODEL_ARMOR';
+
+    /**
+     * The prompt was blocked as a jailbreak attempt.
+     */
+    case JAILBREAK = 'JAILBREAK';
 }

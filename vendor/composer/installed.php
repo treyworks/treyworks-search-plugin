@@ -20,39 +20,39 @@
             'dev_requirement' => false,
         ),
         'google-gemini-php/client' => array(
-            'pretty_version' => '1.0.15',
-            'version' => '1.0.15.0',
+            'pretty_version' => '2.7.3',
+            'version' => '2.7.3.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../google-gemini-php/client',
             'aliases' => array(),
-            'reference' => '6dca9a5e6a6de39b230fe4593a8d041efd02e34e',
+            'reference' => '1391adf5206a17a642571ceff88e660280551726',
             'dev_requirement' => false,
         ),
         'guzzlehttp/guzzle' => array(
-            'pretty_version' => '7.9.3',
-            'version' => '7.9.3.0',
+            'pretty_version' => '7.10.0',
+            'version' => '7.10.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../guzzlehttp/guzzle',
             'aliases' => array(),
-            'reference' => '7b2f29fe81dc4da0ca0ea7d42107a0845946ea77',
+            'reference' => 'b51ac707cfa420b7bfd4e4d5e510ba8008e822b4',
             'dev_requirement' => false,
         ),
         'guzzlehttp/promises' => array(
-            'pretty_version' => '2.2.0',
-            'version' => '2.2.0.0',
+            'pretty_version' => '2.3.0',
+            'version' => '2.3.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../guzzlehttp/promises',
             'aliases' => array(),
-            'reference' => '7c69f28996b0a6920945dd20b3857e499d9ca96c',
+            'reference' => '481557b130ef3790cf82b713667b43030dc9c957',
             'dev_requirement' => false,
         ),
         'guzzlehttp/psr7' => array(
-            'pretty_version' => '2.7.1',
-            'version' => '2.7.1.0',
+            'pretty_version' => '2.8.0',
+            'version' => '2.8.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../guzzlehttp/psr7',
             'aliases' => array(),
-            'reference' => 'c2270caaabe631b3b44c85f99e5a04bbb8060d16',
+            'reference' => '21dc724a0583619cd1652f673303492272778051',
             'dev_requirement' => false,
         ),
         'openai-php/client' => array(
@@ -72,12 +72,12 @@
             ),
         ),
         'php-http/client-common' => array(
-            'pretty_version' => '2.7.2',
-            'version' => '2.7.2.0',
+            'pretty_version' => '2.7.3',
+            'version' => '2.7.3.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../php-http/client-common',
             'aliases' => array(),
-            'reference' => '0cfe9858ab9d3b213041b947c881d5b19ceeca46',
+            'reference' => 'dcc6de29c90dd74faab55f71b79d89409c4bf0c1',
             'dev_requirement' => false,
         ),
         'php-http/client-implementation' => array(
@@ -159,8 +159,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-factory' => array(
@@ -175,8 +175,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-message' => array(
@@ -191,8 +191,8 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'ralouphie/getallheaders' => array(
@@ -214,17 +214,17 @@
             'dev_requirement' => false,
         ),
         'symfony/options-resolver' => array(
-            'pretty_version' => 'v6.4.16',
-            'version' => '6.4.16.0',
+            'pretty_version' => 'v6.4.30',
+            'version' => '6.4.30.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/options-resolver',
             'aliases' => array(),
-            'reference' => '368128ad168f20e22c32159b9f761e456cec0c78',
+            'reference' => 'eeaa8cabe54c7b3516938c72a4a161c0cc80a34f',
             'dev_requirement' => false,
         ),
         'symfony/polyfill-php80' => array(
-            'pretty_version' => 'v1.32.0',
-            'version' => '1.32.0.0',
+            'pretty_version' => 'v1.33.0',
+            'version' => '1.33.0.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/polyfill-php80',
             'aliases' => array(),

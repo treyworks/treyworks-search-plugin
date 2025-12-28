@@ -5,14 +5,17 @@
  */
 ?>
 <div class="wrap">
-    <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <?php require_once PLUGIN_DIR . 'templates/admin-header.php'; ?>
     
-    <!-- Settings Form -->
-    <form action="options.php" method="post">
-        <?php
-            settings_fields('qss_plugin_settings');
-            do_settings_sections('qss-plugin-settings');
-            submit_button('Save Settings');
-        ?>
-    </form>
+    <div class="treyworks-content">
+        <!-- Settings Form -->
+        <form action="options.php" method="post">
+            <?php
+                settings_fields('qss_plugin_settings');
+                do_settings_sections('qss-plugin-settings');
+                submit_button('Save Settings');
+            ?>
+        </form>
+    </div>
+    </div> <!-- Close treyworks-admin -->
 </div>

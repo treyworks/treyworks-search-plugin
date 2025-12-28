@@ -256,4 +256,65 @@ class DB_Logger {
             self::LEVEL_DEBUG => __('Debug', 'treyworks-search'),
         ];
     }
+    
+    /**
+     * Get 30-day activity statistics
+     * 
+     * @return array Array of daily activity data
+     */
+    public static function get_30_day_activity() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . self::$table_name;
+        
+        // Get data for the last 30 days
+        $query = "
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as total_requests,
+                SUM(CASE WHEN log_level = 'info' THEN 1 ELSE 0 END) as success,
+                SUM(CASE WHEN log_level = 'error' THEN 1 ELSE 0 END) as errors,
+                SUM(CASE WHEN log_level = 'warning' THEN 1 ELSE 0 END) as blocked
+            FROM $table_name
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ";
+        
+        $results = $wpdb->get_results($query, ARRAY_A);
+        
+        // Create array with all 30 days (fill in missing days with zeros)
+        $activity_data = [];
+        $end_date = new DateTime();
+        $start_date = new DateTime('-29 days');
+        
+        $interval = new DateInterval('P1D');
+        $period = new DatePeriod($start_date, $interval, $end_date->add($interval));
+        
+        // Initialize all dates with zero values
+        foreach ($period as $date) {
+            $date_str = $date->format('Y-m-d');
+            $activity_data[$date_str] = [
+                'date' => $date_str,
+                'total_requests' => 0,
+                'success' => 0,
+                'errors' => 0,
+                'blocked' => 0
+            ];
+        }
+        
+        // Fill in actual data
+        foreach ($results as $row) {
+            if (isset($activity_data[$row['date']])) {
+                $activity_data[$row['date']] = [
+                    'date' => $row['date'],
+                    'total_requests' => (int) $row['total_requests'],
+                    'success' => (int) $row['success'],
+                    'errors' => (int) $row['errors'],
+                    'blocked' => (int) $row['blocked']
+                ];
+            }
+        }
+        
+        return array_values($activity_data);
+    }
 }
