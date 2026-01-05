@@ -189,20 +189,54 @@ jQuery(document).ready(function($) {
         });
     });
 
-    function performSearch(query) {
-        // Hide common questions when search is performed
-        if (commonQuestions.length) {
-            commonQuestions.addClass('qss-hidden');
+    function updateLoadingMessage(message) {
+        // Update phase indicators - remove active from all, then add to current
+        $('.qss-phase-indicator').removeClass('active');
+        
+        const phase = message.toLowerCase();
+        if (phase.includes('analyzing')) {
+            $('.qss-phase-indicator[data-phase="extracting"]').addClass('active');
+        } else if (phase.includes('searching')) {
+            $('.qss-phase-indicator[data-phase="searching"]').addClass('active');
+        } else if (phase.includes('crafting')) {
+            $('.qss-phase-indicator[data-phase="summarizing"]').addClass('active');
+        }
+    }
+
+    function displaySearchResults(data) {
+        // Hide loading indicator
+        loadingIndicator.hide();
+        searchResults.show();
+
+        // Display summary if available
+        if (data.summary) {
+            const parsedSummary = marked.parse(data.summary);
+            summaryContainer.html('<div class="qss-markdown">' + parsedSummary + '</div>');
         }
 
-        // Show loading indicator
-        loadingIndicator.show();
-        searchResults.hide();
-        summaryContainer.empty();
-        sourcesList.empty().hide();
-        $('.qss-sources-toggle').attr('aria-expanded', 'false');
+        // Display results and collect sources
+        if (data.results && data.results.length > 0) {
+            for (let i = 0; i < data.results.length; i++) {
+                const result = data.results[i];
+                const truncatedContent = truncateText(stripHtml(result.content), 200);
+                const parsedContent = marked.parse(truncatedContent);
+                
+                // Add to sources list
+                sourcesList.append(`
+                    <div class="qss-source-item">
+                        <span class="qss-source-number">${i + 1}</span>
+                        <a href="${result.permalink}" target="_blank">${result.title}</a>
+                    </div>
+                `);
+            }
+        } else {
+            // No results found
+            summaryContainer.html('<div class="qss-no-results">No results found. Please try a different search query.</div>');
+        }
+    }
 
-        // Make API call
+    function performSearchFallback(query) {
+        // Fallback to regular AJAX if SSE fails
         $.ajax({
             url: qssConfig.rest_url,
             method: 'POST',
@@ -214,35 +248,7 @@ jQuery(document).ready(function($) {
                 search_query: query
             }),
             success: function(response) {
-                // Hide loading indicator
-                loadingIndicator.hide();
-                searchResults.show();
-
-                // Display summary if available
-                if (response.summary) {
-                    const parsedSummary = marked.parse(response.summary);
-                    summaryContainer.html('<div class="qss-markdown">' + parsedSummary + '</div>');
-                }
-
-                // Display results and collect sources
-                if (response.results && response.results.length > 0) {
-                    for (let i = 0; i < response.results.length; i++) {
-                        const result = response.results[i];
-                        const truncatedContent = truncateText(stripHtml(result.content), 200);
-                        const parsedContent = marked.parse(truncatedContent);
-                        
-                        // Add to sources list
-                        sourcesList.append(`
-                            <div class="qss-source-item">
-                                <span class="qss-source-number">${i + 1}</span>
-                                <a href="${result.permalink}" target="_blank">${result.title}</a>
-                            </div>
-                        `);
-                    }
-                } else {
-                    // No results found
-                    summaryContainer.html('<div class="qss-no-results">No results found. Please try a different search query.</div>');
-                }
+                displaySearchResults(response);
             },
             error: function(xhr, status, error) {
                 loadingIndicator.hide();
@@ -258,6 +264,73 @@ jQuery(document).ready(function($) {
                 console.error('Search error:', error);
             }
         });
+    }
+
+    function performSearch(query) {
+        // Hide common questions when search is performed
+        if (commonQuestions.length) {
+            commonQuestions.addClass('qss-hidden');
+        }
+
+        // Show loading indicator
+        loadingIndicator.show();
+        searchResults.hide();
+        summaryContainer.empty();
+        sourcesList.empty().hide();
+        $('.qss-sources-toggle').attr('aria-expanded', 'false');
+        updateLoadingMessage('Initializing...');
+
+        // Check if EventSource is supported
+        if (typeof EventSource === 'undefined') {
+            console.log('EventSource not supported, using fallback');
+            performSearchFallback(query);
+            return;
+        }
+
+        // Build SSE URL with query parameters
+        const streamUrl = qssConfig.stream_url + 
+            '?search_query=' + encodeURIComponent(query) + 
+            '&_wpnonce=' + qssConfig.nonce;
+
+        const eventSource = new EventSource(streamUrl);
+
+        eventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                switch(data.phase) {
+                    case 'extracting':
+                        updateLoadingMessage(data.message);
+                        break;
+                    case 'searching':
+                        updateLoadingMessage(data.message);
+                        break;
+                    case 'summarizing':
+                        updateLoadingMessage(data.message);
+                        break;
+                    case 'complete':
+                        eventSource.close();
+                        displaySearchResults(data.data);
+                        break;
+                    case 'error':
+                        eventSource.close();
+                        loadingIndicator.hide();
+                        searchResults.show();
+                        summaryContainer.html(`<div class="qss-error">${data.message}</div>`);
+                        break;
+                }
+            } catch (e) {
+                console.error('Error parsing SSE data:', e);
+                eventSource.close();
+                performSearchFallback(query);
+            }
+        };
+
+        eventSource.onerror = function(error) {
+            console.error('SSE error, falling back to AJAX:', error);
+            eventSource.close();
+            performSearchFallback(query);
+        };
     }
 
     // Handle question form submission

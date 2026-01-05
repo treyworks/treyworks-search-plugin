@@ -56,8 +56,21 @@ $common_questions = get_option('qss_plugin_common_questions', '');
         </div>
 
         <div id="qss-loading" class="qss-loading" style="display: none;">
-        <div class="qss-loader"></div>
-            <?php echo esc_html__('Searching...', 'treyworks-search'); ?>
+            <div class="qss-loader"></div>
+            <div class="qss-loading-phases">
+                <div class="qss-phase-indicator" data-phase="extracting">
+                    <span class="qss-phase-dot"></span>
+                    <span class="qss-phase-label"><?php echo esc_html__('Analyzing your question...', 'treyworks-search'); ?></span>
+                </div>
+                <div class="qss-phase-indicator" data-phase="searching">
+                    <span class="qss-phase-dot"></span>
+                    <span class="qss-phase-label"><?php echo esc_html__('Searching the site...', 'treyworks-search'); ?></span>
+                </div>
+                <div class="qss-phase-indicator" data-phase="summarizing">
+                    <span class="qss-phase-dot"></span>
+                    <span class="qss-phase-label"><?php echo esc_html__('Crafting your answer...', 'treyworks-search'); ?></span>
+                </div>
+            </div>
         </div>
 
         <div id="qss-search-results" class="qss-search-results" style="display: none;">

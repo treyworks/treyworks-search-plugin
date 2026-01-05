@@ -3,7 +3,7 @@
  * Plugin Name: Treyworks Search for WordPress
  * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -92,7 +92,7 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function define_constants() {
-            define('PLUGIN_VERSION', '1.3.0');
+            define('PLUGIN_VERSION', '1.3.1');
             define('PLUGIN_DIR', plugin_dir_path(__FILE__));
             define('PLUGIN_URL', plugin_dir_url(__FILE__));
         }
@@ -144,57 +144,94 @@ if (!class_exists('QuickSearchSummarizer')) {
          */
         private function search_site($search_term, $post_ids = null) {
             // Get max search results setting
-            $max_results = get_option('qss_plugin_max_search_results', 10);
+            $max_results = get_option('qss_plugin_max_search_results', 3);
             
-            // Search query arguments
-            $args = array(
-                's' => $search_term,
-                'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
-                'post_status' => 'publish',
-                'posts_per_page' => $max_results,
-            );
-
-            // If specific post IDs are provided, add them to the query
-            if (!empty($post_ids) && is_array($post_ids)) {
-                // Ensure IDs are integers
-                $post_ids = array_map('intval', $post_ids);
-                $args['post__in'] = $post_ids;
-                // When post__in is used, 's' is ignored, so we remove it to avoid confusion
-                // We will filter by content later if needed, though typically specifying IDs means we want only those.
-                unset($args['s']); 
-            }
-
-            // Perform the search
-            $search_query = new WP_Query($args);
-            $search_results = array();
-
-            // Get search results
-            if ($search_query->have_posts()) {
-
-                // Loop through search results
-                $result_count = 0;
-                while ($search_query->have_posts()) {
-                    $search_query->the_post();
-                    
-                    // Get post content
-                    $content = wp_strip_all_tags(get_the_content());
-                    
-                    // Allow plugins to modify the content (e.g., add custom fields)
-                    $content = apply_filters('qss_pre_ai_content', $content, get_the_ID());
-                    
-                    $search_results[] = array(
-                        'title' => get_the_title(),
-                        'content' => $content,
-                        'permalink' => get_permalink()
-                    );
-                    
-                    // Increment result count
-                    $result_count++;
+            // Split search term by comma to handle multiple extracted terms
+            $search_terms = array_map('trim', explode(',', $search_term));
+            $all_results = array();
+            $seen_post_ids = array();
+            
+            // Loop through each extracted term
+            foreach ($search_terms as $term) {
+                if (empty($term)) {
+                    continue;
                 }
-            }
+                
+                // Search query arguments
+                $args = array(
+                    's' => $term,
+                    'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
+                    'post_status' => 'publish',
+                    'posts_per_page' => $max_results,
+                );
 
-            wp_reset_postdata();
-            return $search_results;
+                // If specific post IDs are provided, add them to the query
+                if (!empty($post_ids) && is_array($post_ids)) {
+                    // Ensure IDs are integers
+                    $post_ids = array_map('intval', $post_ids);
+                    $args['post__in'] = $post_ids;
+                    unset($args['s']); 
+                }
+
+                // Perform the search
+                $search_query = new WP_Query($args);
+
+                // Get search results
+                if ($search_query->have_posts()) {
+                    while ($search_query->have_posts()) {
+                        $search_query->the_post();
+                        $post_id = get_the_ID();
+                        
+                        // Skip if we've already added this post
+                        if (in_array($post_id, $seen_post_ids)) {
+                            continue;
+                        }
+                        
+                        // Get post content
+                        $content = wp_strip_all_tags(get_the_content());
+                        
+                        // Allow plugins to modify the content (e.g., add custom fields)
+                        $content = apply_filters('qss_pre_ai_content', $content, $post_id);
+                        
+                        $all_results[] = array(
+                            'title' => get_the_title(),
+                            'content' => $content,
+                            'permalink' => get_permalink(),
+                            'post_id' => $post_id,
+                            'relevance_score' => $search_query->current_post + 1
+                        );
+                        
+                        $seen_post_ids[] = $post_id;
+                    }
+                }
+
+                wp_reset_postdata();
+            }
+            
+            // Rank results by relevance score (lower is better)
+            usort($all_results, function($a, $b) {
+                return $a['relevance_score'] - $b['relevance_score'];
+            });
+            
+            // Limit to max results and remove scoring metadata
+            $final_results = array_slice($all_results, 0, $max_results);
+            foreach ($final_results as &$result) {
+                unset($result['relevance_score']);
+                unset($result['post_id']);
+            }
+            
+            return $final_results;
+        }
+
+        /**
+         * Send Server-Sent Event
+         */
+        private function send_sse_event($data) {
+            echo "data: " . json_encode($data) . "\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
         }
 
         private function get_llm_client($llm_provider = 'openai') {
@@ -328,6 +365,15 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
             ]);
 
+            // Register SSE stream search route
+            register_rest_route('treyworks-search/v1', '/search-stream', [
+                'methods' => ['GET'],
+                'callback' => [ $this, 'get_search_results_stream' ],
+                'permission_callback' => function() {
+                    return true; // Allow public access to the endpoint
+                }
+            ]);
+
             // Register ask route
             register_rest_route('treyworks-search/v1', '/get_answer', [
                 'methods' => ['POST'],
@@ -336,6 +382,122 @@ if (!class_exists('QuickSearchSummarizer')) {
                     return true; // Allow public access to the endpoint
                 }
             ]);
+        }
+
+        // Function to handle SSE stream search requests
+        public function get_search_results_stream($request) {
+            // Set SSE headers
+            header('Content-Type: text/event-stream');
+            header('Cache-Control: no-cache');
+            header('X-Accel-Buffering: no');
+            
+            // Disable output buffering for immediate streaming
+            if (function_exists('apache_setenv')) {
+                @apache_setenv('no-gzip', '1');
+            }
+            @ini_set('zlib.output_compression', 0);
+            @ini_set('implicit_flush', 1);
+            for ($i = 0; $i < ob_get_level(); $i++) {
+                ob_end_flush();
+            }
+            ob_implicit_flush(1);
+
+            // Verify nonce from query parameter
+            $nonce = $request->get_param('_wpnonce');
+            if (!wp_verify_nonce($nonce, 'wp_rest')) {
+                $this->send_sse_event(['phase' => 'error', 'message' => 'Invalid nonce']);
+                exit;
+            }
+
+            // Verify request server
+            if (!$this->verify_request_server()) {
+                $this->send_sse_event(['phase' => 'error', 'message' => 'Cross Origin access forbidden']);
+                exit;
+            }
+
+            // Get settings
+            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
+            
+            // Get custom prompts or use defaults
+            $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
+            $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+
+            try {
+                // Get search query from URL parameter
+                $search_query = $request->get_param('search_query');
+
+                if (empty($search_query)) {
+                    $this->send_sse_event(['phase' => 'error', 'message' => 'Search query is required']);
+                    exit;
+                }
+
+                // Phase 1: Extracting search terms
+                $this->send_sse_event(['phase' => 'extracting', 'message' => 'Analyzing your question...']);
+                
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+
+                // Phase 2: Searching the site
+                $this->send_sse_event(['phase' => 'searching', 'message' => 'Searching the site...']);
+                
+                // Handle post_ids if provided
+                $post_ids = null;
+                $post_ids_param = $request->get_param('post_ids');
+                if (!empty($post_ids_param)) {
+                    $post_ids = array_map('intval', explode(',', sanitize_text_field($post_ids_param)));
+                    $post_ids = array_filter($post_ids, function($id) { return $id > 0; });
+                    if (empty($post_ids)) {
+                        $post_ids = null;
+                    }
+                }
+
+                $search_results = $this->search_site($extracted_search_term, $post_ids);
+
+                // Phase 3: Crafting the answer
+                $this->send_sse_event(['phase' => 'summarizing', 'message' => 'Crafting your answer...']);
+                
+                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query, $llm_provider);
+
+                // Get model information for logging
+                $extraction_model = $this->settings->get_llm_model($llm_provider, 'extraction');
+                $generative_model = $this->settings->get_llm_model($llm_provider, 'generative');
+
+                // Log search results
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Search complete: ' . $search_query), TREYWORKS_LOG_INFO, [
+                    'extracted_search_term' => $extracted_search_term, 
+                    'summary' => $summary,
+                    'referer' => $referer,
+                    'llm_provider' => $llm_provider,
+                    'extraction_model' => $extraction_model,
+                    'generative_model' => $generative_model
+                ]);
+
+                // Phase 4: Complete
+                $this->send_sse_event([
+                    'phase' => 'complete',
+                    'message' => 'Done!',
+                    'data' => [
+                        'query' => $search_query,
+                        'results' => $search_results,
+                        'summary' => $summary
+                    ]
+                ]);
+
+            } catch (Exception $e) {
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Search error: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
+                    'exception' => get_class($e),
+                    'referer' => $referer,
+                    'llm_provider' => isset($llm_provider) ? $llm_provider : 'unknown'
+                ]);
+                
+                $this->send_sse_event([
+                    'phase' => 'error',
+                    'message' => 'Error processing search request: ' . $e->getMessage()
+                ]);
+            }
+            
+            exit;
         }
 
          // Function to handle search requests

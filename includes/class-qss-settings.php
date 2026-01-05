@@ -190,7 +190,7 @@ class QSS_Plugin_Settings {
                 'type' => 'number',
                 'description' => __('Maximum number of search results to return and process. Higher values provide more context but may increase processing time.', 'qss-plugin'),
                 'sanitize_callback' => 'absint',
-                'default' => 10
+                'default' => 3
             ),
             'llm_provider' => array(
                 'label' => __('AI Model Provider', 'qss-plugin'),
@@ -605,6 +605,7 @@ class QSS_Plugin_Settings {
     private function render_api_endpoints() {
         $rest_base = rest_url('treyworks-search/v1');
         $search_endpoint = $rest_base . '/search';
+        $stream_endpoint = $rest_base . '/search-stream';
         $ask_endpoint = $rest_base . '/get_answer';
         ?>
         <div class="treyworks-api-endpoints-display">
@@ -618,6 +619,19 @@ class QSS_Plugin_Settings {
                 </div>
                 <p class="description">
                     <?php _e('POST request to search your site and get AI-generated summaries.', 'qss-plugin'); ?>
+                </p>
+            </div>
+            
+            <div class="treyworks-endpoint-section">
+                <h4><?php _e('Search Stream Endpoint (SSE)', 'qss-plugin'); ?></h4>
+                <div class="treyworks-endpoint-url">
+                    <code><?php echo esc_html($stream_endpoint); ?></code>
+                    <button type="button" class="button button-small copy-endpoint" data-endpoint="<?php echo esc_attr($stream_endpoint); ?>">
+                        <?php _e('Copy', 'qss-plugin'); ?>
+                    </button>
+                </div>
+                <p class="description">
+                    <?php _e('GET request with Server-Sent Events for real-time progress updates during search.', 'qss-plugin'); ?>
                 </p>
             </div>
             
