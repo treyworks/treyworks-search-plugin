@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Default system prompts for OpenAI interactions
+ * Default system prompts for Gemini interactions
  */
 class QSS_Default_Prompts {
     /**

@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-Treyworks Search is a WordPress plugin that adds AI-powered search summaries and answer generation using OpenAI or Google Gemini.
+Treyworks Search is a WordPress plugin that adds AI-powered search summaries and answer generation using Google Gemini.
 
 ## Stack
 - PHP 8.1+

@@ -1,7 +1,7 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '1.2.0',
-        'version' => '1.2.0.0',
+        'pretty_version' => '1.4.0',
+        'version' => '1.4.0.0',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -20,12 +20,12 @@
             'dev_requirement' => false,
         ),
         'google-gemini-php/client' => array(
-            'pretty_version' => '2.7.3',
-            'version' => '2.7.3.0',
+            'pretty_version' => '2.7.4',
+            'version' => '2.7.4.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../google-gemini-php/client',
             'aliases' => array(),
-            'reference' => '1391adf5206a17a642571ceff88e660280551726',
+            'reference' => 'd61ebe8e8f7acc2aa66ce2e8a57c23bf32e1e340',
             'dev_requirement' => false,
         ),
         'guzzlehttp/guzzle' => array(
@@ -53,15 +53,6 @@
             'install_path' => __DIR__ . '/../guzzlehttp/psr7',
             'aliases' => array(),
             'reference' => '21dc724a0583619cd1652f673303492272778051',
-            'dev_requirement' => false,
-        ),
-        'openai-php/client' => array(
-            'pretty_version' => 'v0.7.10',
-            'version' => '0.7.10.0',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../openai-php/client',
-            'aliases' => array(),
-            'reference' => 'f9af25d7d7bd8e58f60ada6c30f1c93d65c73833',
             'dev_requirement' => false,
         ),
         'php-http/async-client-implementation' => array(
@@ -128,15 +119,6 @@
             'provided' => array(
                 0 => '1.0',
             ),
-        ),
-        'php-http/multipart-stream-builder' => array(
-            'pretty_version' => '1.4.2',
-            'version' => '1.4.2.0',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../php-http/multipart-stream-builder',
-            'aliases' => array(),
-            'reference' => '10086e6de6f53489cca5ecc45b6f468604d3460e',
-            'dev_requirement' => false,
         ),
         'php-http/promise' => array(
             'pretty_version' => '1.3.1',
@@ -232,8 +214,8 @@
             'dev_requirement' => false,
         ),
         'treyworks-search/wordpress-plugin' => array(
-            'pretty_version' => '1.2.0',
-            'version' => '1.2.0.0',
+            'pretty_version' => '1.4.0',
+            'version' => '1.4.0.0',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

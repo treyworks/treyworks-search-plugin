@@ -3,7 +3,7 @@
  * Plugin Name: Treyworks Search for WordPress
  * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.3.1
+ * Version: 1.4.0
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -92,7 +92,7 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function define_constants() {
-            define('PLUGIN_VERSION', '1.3.1');
+            define('PLUGIN_VERSION', '1.4.0');
             define('PLUGIN_DIR', plugin_dir_path(__FILE__));
             define('PLUGIN_URL', plugin_dir_url(__FILE__));
         }
@@ -116,7 +116,6 @@ if (!class_exists('QuickSearchSummarizer')) {
             require_once PLUGIN_DIR . '/includes/class-qss-settings.php';
             require_once PLUGIN_DIR . '/includes/class-custom-field-search.php';
             require_once PLUGIN_DIR . 'includes/class-qss-core.php';
-            require_once PLUGIN_DIR . '/includes/class-openai-client.php';
             require_once PLUGIN_DIR . '/includes/class-gemini-client.php';
         }
 
@@ -234,66 +233,32 @@ if (!class_exists('QuickSearchSummarizer')) {
             flush();
         }
 
-        private function get_llm_client($llm_provider = 'openai') {
-            
-            // Check LLM provider
-            switch ($llm_provider) {
-                case 'gemini':
-                    // Gemini
-                    $api_key = $this->settings->get_gemini_key();
-                    if (empty($api_key)) {
-                        throw new Exception('Google Gemini API key is not set.');
-                    }
-                    $client = QSS_Gemini_Client::get_instance();
-                    break;
-
-                case 'openai':
-                default:
-                    // OpenAI
-                    $api_key = $this->settings->get_openai_key();
-                    if (empty($api_key)) {
-                        throw new Exception('OpenAI API key is not set.');
-                    }
-                    $client = QSS_OpenAI_Client::get_instance();
-                    break;
+        private function get_llm_client() {
+            $api_key = $this->settings->get_gemini_key();
+            if (empty($api_key)) {
+                throw new Exception('Google Gemini API key is not set.');
             }
-            
+
+            $client = QSS_Gemini_Client::get_instance();
+
             return $client->initialize($api_key);
         }
 
         /**
          * Get prompt result using chosen LLM
          */
-        private function get_prompt_result($system_prompt, $query, $llm_provider) {
-            
+        private function get_prompt_result($system_prompt, $query) {
             // Get LLM client
-            $client = $this->get_llm_client($llm_provider);
+            $client = $this->get_llm_client();
 
             // Get LLM model
-            $model = $this->settings->get_llm_model($llm_provider, 'generative');
+            $model = $this->settings->get_llm_model('generative');
             
             try {
-                if ($llm_provider === 'gemini') {
-                    $response = $client->generativeModel(model: $model)->generateContent(
-                        $system_prompt . '\n User query: ' . $query
-                    );
-                    return $response->text();
-                } else {
-                    $response = $client->chat()->create([
-                        'model' => $model,
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => $system_prompt
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => 'User query: ' . $query
-                            ]
-                        ]
-                    ]);
-                    return $response->choices[0]->message->content;
-                }
+                $response = $client->generativeModel(model: $model)->generateContent(
+                    $system_prompt . '\n User query: ' . $query
+                );
+                return $response->text();
             } catch (Exception $e) {
                 treyworks_log('LLM API Error: ' . $e->getMessage(), TREYWORKS_LOG_ERROR);
                 return $query;
@@ -303,11 +268,11 @@ if (!class_exists('QuickSearchSummarizer')) {
         /**
          * Process search results using LLM
          */
-        private function process_search_results($system_prompt, $results, $query, $llm_provider) {
+        private function process_search_results($system_prompt, $results, $query) {
 
             // Get LLM client and model
-            $client = $this->get_llm_client($llm_provider);
-            $model = $this->settings->get_llm_model($llm_provider, 'extraction');
+            $client = $this->get_llm_client();
+            $model = $this->settings->get_llm_model('extraction');
 
             // Format results for the API
             $formatted_results = array_map(function($result) {
@@ -328,27 +293,10 @@ if (!class_exists('QuickSearchSummarizer')) {
             $prompt = $system_prompt . '\nSearch results:\n' . $encoded_results;
 
             try {
-                if ($llm_provider === 'gemini') {
-                    $response = $client->generativeModel(model: $model)->generateContent(
-                        $prompt . '\n\nUser query: ' . $query
-                    );
-                    return $response->text();
-                } else {
-                    $response = $client->chat()->create([
-                        'model' => $model,
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => $prompt
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => 'User query: ' . $query
-                            ]
-                        ]
-                    ]);
-                    return $response->choices[0]->message->content;
-                }
+                $response = $client->generativeModel(model: $model)->generateContent(
+                    $prompt . '\n\nUser query: ' . $query
+                );
+                return $response->text();
             } catch (Exception $e) {
                 treyworks_log('LLM API Error: ' . $e->getMessage(), TREYWORKS_LOG_ERROR);
                 return '';
@@ -415,9 +363,6 @@ if (!class_exists('QuickSearchSummarizer')) {
                 exit;
             }
 
-            // Get settings
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
-            
             // Get custom prompts or use defaults
             $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
             $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
@@ -434,7 +379,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 // Phase 1: Extracting search terms
                 $this->send_sse_event(['phase' => 'extracting', 'message' => 'Analyzing your question...']);
                 
-                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
 
                 // Phase 2: Searching the site
                 $this->send_sse_event(['phase' => 'searching', 'message' => 'Searching the site...']);
@@ -455,11 +400,11 @@ if (!class_exists('QuickSearchSummarizer')) {
                 // Phase 3: Crafting the answer
                 $this->send_sse_event(['phase' => 'summarizing', 'message' => 'Crafting your answer...']);
                 
-                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query, $llm_provider);
+                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query);
 
                 // Get model information for logging
-                $extraction_model = $this->settings->get_llm_model($llm_provider, 'extraction');
-                $generative_model = $this->settings->get_llm_model($llm_provider, 'generative');
+                $extraction_model = $this->settings->get_llm_model('extraction');
+                $generative_model = $this->settings->get_llm_model('generative');
 
                 // Log search results
                 $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
@@ -467,7 +412,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     'extracted_search_term' => $extracted_search_term, 
                     'summary' => $summary,
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider,
+                    'llm_provider' => 'gemini',
                     'extraction_model' => $extraction_model,
                     'generative_model' => $generative_model
                 ]);
@@ -488,7 +433,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 treyworks_log(__('Search error: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
                     'exception' => get_class($e),
                     'referer' => $referer,
-                    'llm_provider' => isset($llm_provider) ? $llm_provider : 'unknown'
+                    'llm_provider' => 'gemini'
                 ]);
                 
                 $this->send_sse_event([
@@ -512,9 +457,6 @@ if (!class_exists('QuickSearchSummarizer')) {
             if (!$this->verify_request_server()) {
                 return new WP_Error('no_crossorigin', __('Cross Origin access forbidden'), ['status' => 403]);
             }
-
-            // Get settings
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
             
             // Get custom prompt or use default
             $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
@@ -532,7 +474,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
                 
                 // Get prompt result
-                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
 
                 // Perform WordPress search
                 $post_ids = null;
@@ -547,11 +489,11 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Create summary of search results
-                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query, $llm_provider);
+                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query);
 
                 // Get model information for logging
-                $extraction_model = $this->settings->get_llm_model($llm_provider, 'extraction');
-                $generative_model = $this->settings->get_llm_model($llm_provider, 'generative');
+                $extraction_model = $this->settings->get_llm_model('extraction');
+                $generative_model = $this->settings->get_llm_model('generative');
 
                 // Log search results with referer URL and model info
                 $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
@@ -559,7 +501,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     'extracted_search_term' => $extracted_search_term, 
                     'summary' => $summary,
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider,
+                    'llm_provider' => 'gemini',
                     'extraction_model' => $extraction_model,
                     'generative_model' => $generative_model
                 ]);
@@ -576,7 +518,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 treyworks_log(__('Search error: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
                     'exception' => get_class($e),
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider
+                    'llm_provider' => 'gemini'
                 ]);
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }
@@ -611,9 +553,6 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
             }
 
-            // Get settings
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
-
             try {
                 // Get request parameters
                 $params = $request->get_json_params();
@@ -646,7 +585,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $answer_prompt = get_option('qss_plugin_get_answer_prompt', QSS_Default_Prompts::GET_ANSWER);
 
                 // Get Extracted Search Term prompt result
-                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
 
                 // Get post IDs from request
                 $post_ids = null;
@@ -662,11 +601,11 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Get answer
-                $answer = $this->process_search_results($answer_prompt, $search_results, $search_query, $llm_provider);
+                $answer = $this->process_search_results($answer_prompt, $search_results, $search_query);
                 
                 // Get model information for logging
-                $extraction_model = $this->settings->get_llm_model($llm_provider, 'extraction');
-                $generative_model = $this->settings->get_llm_model($llm_provider, 'generative');
+                $extraction_model = $this->settings->get_llm_model('extraction');
+                $generative_model = $this->settings->get_llm_model('generative');
                 
                 // Log search results with referer URL and model info
                 $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
@@ -674,7 +613,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     'answer' => $answer, 
                     'extracted_search_term' => $extracted_search_term,
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider,
+                    'llm_provider' => 'gemini',
                     'extraction_model' => $extraction_model,
                     'generative_model' => $generative_model
                 ]);
@@ -687,7 +626,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 treyworks_log(__('Error getting answer: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
                     'exception' => get_class($e),
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider
+                    'llm_provider' => 'gemini'
                 ]);
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }

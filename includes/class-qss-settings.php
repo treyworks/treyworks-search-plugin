@@ -6,7 +6,6 @@ if (!defined('ABSPATH')) exit;
  */
 class QSS_Plugin_Settings {
     private static $instance = null;
-    private static $openai_models = array();
     private static $gemini_models = array();
 
     /**
@@ -23,19 +22,9 @@ class QSS_Plugin_Settings {
      * Constructor
      */
     private function __construct() {
-        // Initialize model arrays
-        self::$openai_models = array(
-            'gpt-5.2' => __('GPT-5.2', 'qss-plugin'),
-            'gpt-5.1' => __('GPT-5.1', 'qss-plugin'),
-            'gpt-5-mini-2025-08-07' => __('GPT-5 Mini', 'qss-plugin'),
-            'gpt-4.1' => __('GPT-4.1', 'qss-plugin'),
-            'gpt-4.1-mini' => __('GPT-4.1 Mini', 'qss-plugin'),
-        );
-        
         self::$gemini_models = array(
-            'gemini-3-flash-preview' => __('Gemini 3 Flash Preview', 'qss-plugin'),
-            'gemini-2.5-pro' => __('Gemini 2.5 Pro', 'qss-plugin'),
-            'gemini-2.5-flash' => __('Gemini 2.5 Flash', 'qss-plugin'),
+            'gemini-3.1-flash-lite-preview' => __('Gemini 3.1 Flash Lite Preview', 'qss-plugin'),
+            'gemini-3-flash-preview' => __('Gemini 3 Flash Preview', 'qss-plugin')
         );
         
         add_action('admin_menu', [$this, 'add_options_page']);
@@ -81,13 +70,6 @@ class QSS_Plugin_Settings {
     }
 
     /**
-     * Get OpenAI API key from settings
-     */
-    public function get_openai_key() {
-        return get_option('qss_plugin_openai_api_key');
-    }
-
-    /**
      * Get Gemini API key from settings
      */
     public function get_gemini_key() {
@@ -102,31 +84,14 @@ class QSS_Plugin_Settings {
     }
 
     /**
-     * Get LLM Model name from settings based on provider
-     * @param string $provider Optional provider override
-     * @return string The model name for the selected provider
+     * Get Gemini model name from settings
      */
-    public function get_llm_model($provider = null, $type = 'extraction') {
-        // If no provider is specified, get it from the settings
-        if (empty($provider)) {
-            $provider = get_option('qss_plugin_llm_provider', 'openai');
+    public function get_llm_model($type = 'extraction') {
+        if ($type === 'extraction') {
+            return get_option('qss_plugin_gemini_extraction_model', 'gemini-2.5-flash');
         }
-        
-        // Return the appropriate model based on the provider
-        if ($provider === 'gemini') {
-            if ($type === 'extraction') {
-                return get_option('qss_plugin_gemini_extraction_model', 'gemini-2.5-flash');
-            } else {
-                return get_option('qss_plugin_gemini_generative_model', 'gemini-2.5-flash');
-            }
-        } else {
-            // Default to OpenAI
-            if ($type === 'extraction') {   
-                return get_option('qss_plugin_openai_extraction_model', 'gpt-4.1');
-            } else {
-                return get_option('qss_plugin_openai_generative_model', 'gpt-4.1');
-            }
-        }
+
+        return get_option('qss_plugin_gemini_generative_model', 'gemini-2.5-flash');
     }
 
     /**
@@ -192,43 +157,13 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'absint',
                 'default' => 3
             ),
-            'llm_provider' => array(
-                'label' => __('AI Model Provider', 'qss-plugin'),
-                'type' => 'select',
-                'options' => array(
-                    'openai' => __('OpenAI', 'qss-plugin'),
-                    'gemini' => __('Google Gemini', 'qss-plugin')
-                ),
-                'description' => __('Select which AI model provider to use for search and summarization.', 'qss-plugin'),
-                'sanitize_callback' => 'sanitize_text_field',
-                'default' => 'openai'
-            ),
-            'openai_extraction_model' => array(
-                'label' => __('OpenAI Extraction Model', 'qss-plugin'),
-                'type' => 'select',
-                'options' => self::$openai_models,
-                'description' => __('Select the OpenAI model to use.', 'qss-plugin'),
-                'sanitize_callback' => 'sanitize_text_field',
-                'default' => 'gpt-4.1-nano',
-                'condition' => array('llm_provider', 'openai')
-            ),
-            'openai_generative_model' => array(
-                'label' => __('OpenAI Generative Model', 'qss-plugin'),
-                'type' => 'select',
-                'options' => self::$openai_models,
-                'description' => __('Select the OpenAI model to use.', 'qss-plugin'),
-                'sanitize_callback' => 'sanitize_text_field',
-                'default' => 'gpt-4.1',
-                'condition' => array('llm_provider', 'openai')
-            ),
             'gemini_extraction_model' => array(
                 'label' => __('Gemini Extraction Model', 'qss-plugin'),
                 'type' => 'select',
                 'options' => self::$gemini_models,
                 'description' => __('Select the Gemini model to use.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_text_field',
-                'default' => 'gemini-2.0-flash-lite',
-                'condition' => array('llm_provider', 'gemini')
+                'default' => 'gemini-2.5-flash'
             ),
             'gemini_generative_model' => array(
                 'label' => __('Gemini Generative Model', 'qss-plugin'),
@@ -236,22 +171,13 @@ class QSS_Plugin_Settings {
                 'options' => self::$gemini_models,
                 'description' => __('Select the Gemini model to use.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_text_field',
-                'default' => 'gemini-2.5-flash',
-                'condition' => array('llm_provider', 'gemini')
-            ),
-            'openai_api_key' => array(
-                'label' => __('OpenAI API Key', 'qss-plugin'),
-                'type' => 'text',
-                'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_openai_api_key" value="' . esc_attr(get_option('qss_plugin_openai_api_key')) . '" /><button type="button" class="button qss-reveal-api-key"><span class="dashicons dashicons-visibility"></span></button></div>',
-                'sanitize_callback' => 'sanitize_text_field',
-                'condition' => array('llm_provider', 'openai')
+                'default' => 'gemini-2.5-flash'
             ),
             'gemini_api_key' => array(
                 'label' => __('Google Gemini API Key', 'qss-plugin'),
                 'type' => 'text',
                 'description' => '<div class="password-field"><input type="password" class="qss-api-key-field" name="qss_plugin_gemini_api_key" value="' . esc_attr(get_option('qss_plugin_gemini_api_key')) . '" /><button type="button" class="button qss-reveal-api-key"><span class="dashicons dashicons-visibility"></span></button></div>',
-                'sanitize_callback' => 'sanitize_text_field',
-                'condition' => array('llm_provider', 'gemini')
+                'sanitize_callback' => 'sanitize_text_field'
             ),
             'integration_token' => array(
                 'label' => __('REST API Integration Token', 'qss-plugin'),
@@ -370,7 +296,7 @@ class QSS_Plugin_Settings {
         add_settings_section(
             'qss_plugin_api_section',
             __('API Settings', 'qss-plugin'),
-            function() { echo '<p>' . __('Configure API keys and select AI provider.', 'qss-plugin') . '</p>'; },
+            function() { echo '<p>' . __('Configure your Gemini API key and models.', 'qss-plugin') . '</p>'; },
             'qss-plugin-settings'
         );
 
@@ -413,7 +339,7 @@ class QSS_Plugin_Settings {
                 $section = 'qss_plugin_general_section';
             } elseif (in_array($key, ['searchable_post_types', 'search_custom_fields', 'search_acf_groups', 'max_search_results'])) {
                 $section = 'qss_plugin_search_section';
-            } elseif (in_array($key, ['llm_provider', 'integration_token', 'openai_api_key', 'gemini_api_key', 'openai_extraction_model', 'openai_generative_model', 'gemini_extraction_model', 'gemini_generative_model'])) {
+            } elseif (in_array($key, ['integration_token', 'gemini_api_key', 'gemini_extraction_model', 'gemini_generative_model'])) {
                 $section = 'qss_plugin_api_section';
             } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt', 'get_answer_prompt'])) {
                 $section = 'qss_plugin_prompts_section';
