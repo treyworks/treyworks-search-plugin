@@ -13,7 +13,6 @@ class ComposerStaticInitdf649872c745520393fc0eef82346785
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '8cff32064859f4559445b89279f3199c' => __DIR__ . '/..' . '/php-http/message/src/filters.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
-        '61ba3e92ef91a7a0f1cc260ebd9290e4' => __DIR__ . '/..' . '/openai-php/client/src/OpenAI.php',
         'e4c9b2466af4057cc73ca0bb2fbccd8a' => __DIR__ . '/..' . '/google-gemini-php/client/src/Gemini.php',
     );
 
@@ -32,14 +31,9 @@ class ComposerStaticInitdf649872c745520393fc0eef82346785
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
         ),
-        'O' => 
-        array (
-            'OpenAI\\' => 7,
-        ),
         'H' => 
         array (
             'Http\\Promise\\' => 13,
-            'Http\\Message\\MultipartStream\\' => 29,
             'Http\\Message\\' => 13,
             'Http\\Discovery\\' => 15,
             'Http\\Client\\Common\\' => 19,
@@ -81,17 +75,9 @@ class ComposerStaticInitdf649872c745520393fc0eef82346785
         array (
             0 => __DIR__ . '/..' . '/psr/http-client/src',
         ),
-        'OpenAI\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/openai-php/client/src',
-        ),
         'Http\\Promise\\' => 
         array (
             0 => __DIR__ . '/..' . '/php-http/promise/src',
-        ),
-        'Http\\Message\\MultipartStream\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src',
         ),
         'Http\\Message\\' => 
         array (

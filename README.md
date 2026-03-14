@@ -4,7 +4,7 @@ A WordPress plugin that enhances your site's search functionality by providing A
 
 ## Description
 
-Treyworks Search Plugin is a powerful WordPress plugin that integrates with AI services (OpenAI or Google Gemini) to provide concise, relevant summaries of search results. This helps users quickly find the content they're looking for without having to click through multiple pages.
+Treyworks Search Plugin is a WordPress plugin that integrates with Google Gemini to provide concise, relevant summaries of search results. This helps users quickly find the content they're looking for without having to click through multiple pages.
 
 ### How It Works
 
@@ -15,12 +15,12 @@ The plugin analyzes the user’s search query and identifies the most relevant k
 It performs a search using WordPress’s built-in search functionality to gather the most relevant results.
 
 3️. Generates AI-Powered Summaries
-Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summary that directly answers the user’s question.
+Using Google Gemini, the plugin creates a concise, AI-generated summary that directly answers the user’s question.
 
 ## Features
 
 - AI-powered search result summaries
-- Support for multiple AI providers (OpenAI and Google Gemini)
+- Google Gemini-powered search and answer generation
 - Customizable summary generation
 - Easy-to-use settings interface
 - Seamless integration with WordPress search
@@ -34,12 +34,12 @@ Using OpenAI or Google Gemini, the plugin creates a concise, AI-generated summar
 
 1. Upload the `treyworks-search` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Treyworks Search > Settings in your WordPress admin panel to configure your API keys and preferences
+3. Go to Treyworks Search > Settings in your WordPress admin panel to configure your Gemini API key and preferences
 
 ## Configuration
 
 1. Navigate to Treyworks Search > Settings in your WordPress admin panel
-2. Enter your API key(s) for your preferred AI service (OpenAI or Google Gemini)
+2. Enter your Google Gemini API key
 3. Customize any additional settings as needed
 4. Save your changes
 
@@ -181,7 +181,7 @@ The endpoint returns a concise, structured response optimized for integration wi
 
 - WordPress 6.6 or higher
 - PHP 8.1 or higher
-- Valid API key for either OpenAI or Google Gemini
+- Valid Google Gemini API key
 
 ## Support
 
@@ -200,7 +200,7 @@ Developed by [Clarence Pearson](https://clarencepearson.com) and sponsored by [T
 Treyworks Search Plugin provides a comprehensive admin interface accessible through the WordPress admin panel:
 
 - **Dashboard** (Treyworks Search): Overview of the plugin with quick links to settings and logs
-- **Settings** (Treyworks Search > Settings): Configure API keys, AI models, search options, logging preferences, and REST API security
+- **Settings** (Treyworks Search > Settings): Configure Gemini models, search options, logging preferences, and REST API security
 - **Logs** (Treyworks Search > Logs): View, filter, and manage database logs with detailed context viewing
 
 ## Logging System
@@ -250,6 +250,20 @@ treyworks_log('API rate limit approaching', TREYWORKS_LOG_WARNING, [
 ```
 
 ## Changelog
+
+### 1.4.1
+- **Prompt Architecture Refactor**: Changed search prompts from editable fields to built-in constants with optional tone/branding customization
+- **Extraction Prompt Enhancement**: Updated to generate up to 3 comma-separated search query variations for better coverage
+- **Summary Prompt Improvement**: Removed duplicate "Top Results" section, expanded to provide comprehensive 300-500 word answers
+- **Security Hardening**: Added comprehensive safeguards to all prompts (prompt injection protection, content safety, hallucination prevention)
+- **Admin UI Enhancement**: Added grouped "Built-in System Prompts" viewer with modal display for extraction, summary, and answer prompts
+- **Search Ranking**: Improved result ranking by aggregating matches across extracted terms
+- **Results Display**: Replaced accordion with visible result cards showing excerpts and citations
+
+### 1.4.0
+- Simplified the plugin to Google Gemini-only support
+- Removed OpenAI settings, client code, and dependency wiring
+- Refreshed Composer dependencies for the Gemini-only release
 
 ### 1.3.0
 - Added REST API security with trusted domain management

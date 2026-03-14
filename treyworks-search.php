@@ -3,7 +3,7 @@
  * Plugin Name: Treyworks Search for WordPress
  * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.3.0
+ * Version: 1.4.1
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -92,7 +92,7 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function define_constants() {
-            define('PLUGIN_VERSION', '1.3.0');
+            define('PLUGIN_VERSION', '1.4.1');
             define('PLUGIN_DIR', plugin_dir_path(__FILE__));
             define('PLUGIN_URL', plugin_dir_url(__FILE__));
         }
@@ -116,7 +116,6 @@ if (!class_exists('QuickSearchSummarizer')) {
             require_once PLUGIN_DIR . '/includes/class-qss-settings.php';
             require_once PLUGIN_DIR . '/includes/class-custom-field-search.php';
             require_once PLUGIN_DIR . 'includes/class-qss-core.php';
-            require_once PLUGIN_DIR . '/includes/class-openai-client.php';
             require_once PLUGIN_DIR . '/includes/class-gemini-client.php';
         }
 
@@ -144,119 +143,210 @@ if (!class_exists('QuickSearchSummarizer')) {
          */
         private function search_site($search_term, $post_ids = null) {
             // Get max search results setting
-            $max_results = get_option('qss_plugin_max_search_results', 10);
+            $max_results = get_option('qss_plugin_max_search_results', 3);
             
-            // Search query arguments
-            $args = array(
-                's' => $search_term,
-                'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
-                'post_status' => 'publish',
-                'posts_per_page' => $max_results,
-            );
-
-            // If specific post IDs are provided, add them to the query
-            if (!empty($post_ids) && is_array($post_ids)) {
-                // Ensure IDs are integers
-                $post_ids = array_map('intval', $post_ids);
-                $args['post__in'] = $post_ids;
-                // When post__in is used, 's' is ignored, so we remove it to avoid confusion
-                // We will filter by content later if needed, though typically specifying IDs means we want only those.
-                unset($args['s']); 
+            // Split search term by comma to handle multiple extracted terms
+            $search_terms = array_values(array_filter(array_map('trim', explode(',', $search_term))));
+            if (empty($search_terms) && !empty($search_term)) {
+                $search_terms = array(trim($search_term));
             }
 
-            // Perform the search
-            $search_query = new WP_Query($args);
-            $search_results = array();
+            $ranked_results = array();
+            $candidate_limit = max($max_results * 3, $max_results);
 
-            // Get search results
-            if ($search_query->have_posts()) {
+            if (!empty($post_ids) && is_array($post_ids)) {
+                $post_ids = array_map('intval', $post_ids);
+                $args = array(
+                    'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
+                    'post_status' => 'publish',
+                    'posts_per_page' => -1,
+                    'post__in' => $post_ids,
+                    'orderby' => 'post__in',
+                );
 
-                // Loop through search results
-                $result_count = 0;
-                while ($search_query->have_posts()) {
-                    $search_query->the_post();
-                    
-                    // Get post content
-                    $content = wp_strip_all_tags(get_the_content());
-                    
-                    // Allow plugins to modify the content (e.g., add custom fields)
-                    $content = apply_filters('qss_pre_ai_content', $content, get_the_ID());
-                    
-                    $search_results[] = array(
-                        'title' => get_the_title(),
-                        'content' => $content,
-                        'permalink' => get_permalink()
+                $search_query = new WP_Query($args);
+
+                if ($search_query->have_posts()) {
+                    while ($search_query->have_posts()) {
+                        $search_query->the_post();
+                        $post_id = get_the_ID();
+                        $title = get_the_title();
+                        $content = wp_strip_all_tags(get_the_content());
+                        $content = apply_filters('qss_pre_ai_content', $content, $post_id);
+
+                        $ranked_results[$post_id] = array(
+                            'title' => $title,
+                            'content' => $content,
+                            'permalink' => get_permalink(),
+                            'post_id' => $post_id,
+                            'match_count' => 0,
+                            'title_match_count' => 0,
+                            'exact_title_match_count' => 0,
+                            'best_position' => PHP_INT_MAX,
+                            'position_total' => 0,
+                        );
+
+                        foreach ($search_terms as $term_index => $term) {
+                            $term_lower = function_exists('mb_strtolower') ? mb_strtolower($term) : strtolower($term);
+                            $title_lower = function_exists('mb_strtolower') ? mb_strtolower($title) : strtolower($title);
+                            $content_lower = function_exists('mb_strtolower') ? mb_strtolower($content) : strtolower($content);
+
+                            $title_match = false !== strpos($title_lower, $term_lower);
+                            $content_match = false !== strpos($content_lower, $term_lower);
+
+                            if ($title_match || $content_match) {
+                                $ranked_results[$post_id]['match_count']++;
+                                $ranked_results[$post_id]['best_position'] = min($ranked_results[$post_id]['best_position'], $term_index + 1);
+                                $ranked_results[$post_id]['position_total'] += $term_index + 1;
+
+                                if ($title_match) {
+                                    $ranked_results[$post_id]['title_match_count']++;
+                                }
+
+                                if ($title_lower === $term_lower) {
+                                    $ranked_results[$post_id]['exact_title_match_count']++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                wp_reset_postdata();
+            } else {
+                foreach ($search_terms as $term) {
+                    if (empty($term)) {
+                        continue;
+                    }
+
+                    $args = array(
+                        's' => $term,
+                        'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
+                        'post_status' => 'publish',
+                        'posts_per_page' => $candidate_limit,
                     );
-                    
-                    // Increment result count
-                    $result_count++;
+
+                    $search_query = new WP_Query($args);
+
+                    if ($search_query->have_posts()) {
+                        while ($search_query->have_posts()) {
+                            $search_query->the_post();
+                            $post_id = get_the_ID();
+                            $title = get_the_title();
+                            $content = wp_strip_all_tags(get_the_content());
+                            $content = apply_filters('qss_pre_ai_content', $content, $post_id);
+
+                            if (!isset($ranked_results[$post_id])) {
+                                $ranked_results[$post_id] = array(
+                                    'title' => $title,
+                                    'content' => $content,
+                                    'permalink' => get_permalink(),
+                                    'post_id' => $post_id,
+                                    'match_count' => 0,
+                                    'title_match_count' => 0,
+                                    'exact_title_match_count' => 0,
+                                    'best_position' => PHP_INT_MAX,
+                                    'position_total' => 0,
+                                );
+                            }
+
+                            $position = $search_query->current_post + 1;
+                            $term_lower = function_exists('mb_strtolower') ? mb_strtolower($term) : strtolower($term);
+                            $title_lower = function_exists('mb_strtolower') ? mb_strtolower($title) : strtolower($title);
+
+                            $ranked_results[$post_id]['match_count']++;
+                            $ranked_results[$post_id]['best_position'] = min($ranked_results[$post_id]['best_position'], $position);
+                            $ranked_results[$post_id]['position_total'] += $position;
+
+                            if (false !== strpos($title_lower, $term_lower)) {
+                                $ranked_results[$post_id]['title_match_count']++;
+                            }
+
+                            if ($title_lower === $term_lower) {
+                                $ranked_results[$post_id]['exact_title_match_count']++;
+                            }
+                        }
+                    }
+
+                    wp_reset_postdata();
                 }
             }
 
-            wp_reset_postdata();
-            return $search_results;
-        }
+            $all_results = array_values($ranked_results);
 
-        private function get_llm_client($llm_provider = 'openai') {
-            
-            // Check LLM provider
-            switch ($llm_provider) {
-                case 'gemini':
-                    // Gemini
-                    $api_key = $this->settings->get_gemini_key();
-                    if (empty($api_key)) {
-                        throw new Exception('Google Gemini API key is not set.');
-                    }
-                    $client = QSS_Gemini_Client::get_instance();
-                    break;
+            usort($all_results, function($a, $b) {
+                if ($a['exact_title_match_count'] !== $b['exact_title_match_count']) {
+                    return $b['exact_title_match_count'] <=> $a['exact_title_match_count'];
+                }
 
-                case 'openai':
-                default:
-                    // OpenAI
-                    $api_key = $this->settings->get_openai_key();
-                    if (empty($api_key)) {
-                        throw new Exception('OpenAI API key is not set.');
-                    }
-                    $client = QSS_OpenAI_Client::get_instance();
-                    break;
+                if ($a['title_match_count'] !== $b['title_match_count']) {
+                    return $b['title_match_count'] <=> $a['title_match_count'];
+                }
+
+                if ($a['match_count'] !== $b['match_count']) {
+                    return $b['match_count'] <=> $a['match_count'];
+                }
+
+                if ($a['best_position'] !== $b['best_position']) {
+                    return $a['best_position'] <=> $b['best_position'];
+                }
+
+                if ($a['position_total'] !== $b['position_total']) {
+                    return $a['position_total'] <=> $b['position_total'];
+                }
+
+                return strcasecmp($a['title'], $b['title']);
+            });
+
+            $final_results = array_slice($all_results, 0, $max_results);
+            foreach ($final_results as &$result) {
+                unset($result['match_count']);
+                unset($result['title_match_count']);
+                unset($result['exact_title_match_count']);
+                unset($result['best_position']);
+                unset($result['position_total']);
+                unset($result['post_id']);
             }
             
+            return $final_results;
+        }
+
+        /**
+         * Send Server-Sent Event
+         */
+        private function send_sse_event($data) {
+            echo "data: " . json_encode($data) . "\n\n";
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
+            flush();
+        }
+
+        private function get_llm_client() {
+            $api_key = $this->settings->get_gemini_key();
+            if (empty($api_key)) {
+                throw new Exception('Google Gemini API key is not set.');
+            }
+
+            $client = QSS_Gemini_Client::get_instance();
+
             return $client->initialize($api_key);
         }
 
         /**
          * Get prompt result using chosen LLM
          */
-        private function get_prompt_result($system_prompt, $query, $llm_provider) {
-            
+        private function get_prompt_result($system_prompt, $query) {
             // Get LLM client
-            $client = $this->get_llm_client($llm_provider);
+            $client = $this->get_llm_client();
 
             // Get LLM model
-            $model = $this->settings->get_llm_model($llm_provider, 'generative');
+            $model = $this->settings->get_llm_model('generative');
             
             try {
-                if ($llm_provider === 'gemini') {
-                    $response = $client->generativeModel(model: $model)->generateContent(
-                        $system_prompt . '\n User query: ' . $query
-                    );
-                    return $response->text();
-                } else {
-                    $response = $client->chat()->create([
-                        'model' => $model,
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => $system_prompt
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => 'User query: ' . $query
-                            ]
-                        ]
-                    ]);
-                    return $response->choices[0]->message->content;
-                }
+                $response = $client->generativeModel(model: $model)->generateContent(
+                    $system_prompt . '\n User query: ' . $query
+                );
+                return $response->text();
             } catch (Exception $e) {
                 treyworks_log('LLM API Error: ' . $e->getMessage(), TREYWORKS_LOG_ERROR);
                 return $query;
@@ -266,11 +356,11 @@ if (!class_exists('QuickSearchSummarizer')) {
         /**
          * Process search results using LLM
          */
-        private function process_search_results($system_prompt, $results, $query, $llm_provider) {
+        private function process_search_results($system_prompt, $results, $query) {
 
             // Get LLM client and model
-            $client = $this->get_llm_client($llm_provider);
-            $model = $this->settings->get_llm_model($llm_provider, 'extraction');
+            $client = $this->get_llm_client();
+            $model = $this->settings->get_llm_model('extraction');
 
             // Format results for the API
             $formatted_results = array_map(function($result) {
@@ -291,31 +381,25 @@ if (!class_exists('QuickSearchSummarizer')) {
             $prompt = $system_prompt . '\nSearch results:\n' . $encoded_results;
 
             try {
-                if ($llm_provider === 'gemini') {
-                    $response = $client->generativeModel(model: $model)->generateContent(
-                        $prompt . '\n\nUser query: ' . $query
-                    );
-                    return $response->text();
-                } else {
-                    $response = $client->chat()->create([
-                        'model' => $model,
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => $prompt
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => 'User query: ' . $query
-                            ]
-                        ]
-                    ]);
-                    return $response->choices[0]->message->content;
-                }
+                $response = $client->generativeModel(model: $model)->generateContent(
+                    $prompt . '\n\nUser query: ' . $query
+                );
+                return $response->text();
             } catch (Exception $e) {
                 treyworks_log('LLM API Error: ' . $e->getMessage(), TREYWORKS_LOG_ERROR);
                 return '';
             }
+        }
+
+        private function get_summary_prompt() {
+            $tone_branding_prompt = get_option('qss_plugin_create_summary_prompt', '');
+            $tone_branding_prompt = is_string($tone_branding_prompt) ? trim($tone_branding_prompt) : '';
+
+            if ($tone_branding_prompt === '') {
+                $tone_branding_prompt = QSS_Default_Prompts::CREATE_SUMMARY_TONE_BRANDING;
+            }
+
+            return QSS_Default_Prompts::CREATE_SUMMARY_SYSTEM . "\n\nTone and branding instructions:\n" . $tone_branding_prompt;
         }
 
         public function register_rest_api_routes() {
@@ -323,6 +407,15 @@ if (!class_exists('QuickSearchSummarizer')) {
             register_rest_route('treyworks-search/v1', '/search', [
                 'methods' => ['POST'],
                 'callback' => [ $this, 'get_search_results' ],
+                'permission_callback' => function() {
+                    return true; // Allow public access to the endpoint
+                }
+            ]);
+
+            // Register SSE stream search route
+            register_rest_route('treyworks-search/v1', '/search-stream', [
+                'methods' => ['GET'],
+                'callback' => [ $this, 'get_search_results_stream' ],
                 'permission_callback' => function() {
                     return true; // Allow public access to the endpoint
                 }
@@ -338,6 +431,119 @@ if (!class_exists('QuickSearchSummarizer')) {
             ]);
         }
 
+        // Function to handle SSE stream search requests
+        public function get_search_results_stream($request) {
+            // Set SSE headers
+            header('Content-Type: text/event-stream');
+            header('Cache-Control: no-cache');
+            header('X-Accel-Buffering: no');
+            
+            // Disable output buffering for immediate streaming
+            if (function_exists('apache_setenv')) {
+                @apache_setenv('no-gzip', '1');
+            }
+            @ini_set('zlib.output_compression', 0);
+            @ini_set('implicit_flush', 1);
+            for ($i = 0; $i < ob_get_level(); $i++) {
+                ob_end_flush();
+            }
+            ob_implicit_flush(1);
+
+            // Verify nonce from query parameter
+            $nonce = $request->get_param('_wpnonce');
+            if (!wp_verify_nonce($nonce, 'wp_rest')) {
+                $this->send_sse_event(['phase' => 'error', 'message' => 'Invalid nonce']);
+                exit;
+            }
+
+            // Verify request server
+            if (!$this->verify_request_server()) {
+                $this->send_sse_event(['phase' => 'error', 'message' => 'Cross Origin access forbidden']);
+                exit;
+            }
+
+            // Get custom prompts or use defaults
+            $summary_prompt = $this->get_summary_prompt();
+            $extract_search_term_prompt = QSS_Default_Prompts::EXTRACT_SEARCH_TERM;
+
+            try {
+                // Get search query from URL parameter
+                $search_query = $request->get_param('search_query');
+
+                if (empty($search_query)) {
+                    $this->send_sse_event(['phase' => 'error', 'message' => 'Search query is required']);
+                    exit;
+                }
+
+                // Phase 1: Extracting search terms
+                $this->send_sse_event(['phase' => 'extracting', 'message' => 'Analyzing your question...']);
+                
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
+
+                // Phase 2: Searching the site
+                $this->send_sse_event(['phase' => 'searching', 'message' => 'Searching the site...']);
+                
+                // Handle post_ids if provided
+                $post_ids = null;
+                $post_ids_param = $request->get_param('post_ids');
+                if (!empty($post_ids_param)) {
+                    $post_ids = array_map('intval', explode(',', sanitize_text_field($post_ids_param)));
+                    $post_ids = array_filter($post_ids, function($id) { return $id > 0; });
+                    if (empty($post_ids)) {
+                        $post_ids = null;
+                    }
+                }
+
+                $search_results = $this->search_site($extracted_search_term, $post_ids);
+
+                // Phase 3: Crafting the answer
+                $this->send_sse_event(['phase' => 'summarizing', 'message' => 'Crafting your answer...']);
+                
+                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query);
+
+                // Get model information for logging
+                $extraction_model = $this->settings->get_llm_model('extraction');
+                $generative_model = $this->settings->get_llm_model('generative');
+
+                // Log search results
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Search complete: ' . $search_query), TREYWORKS_LOG_INFO, [
+                    'extracted_search_term' => $extracted_search_term, 
+                    'summary' => $summary,
+                    'referer' => $referer,
+                    'llm_provider' => 'gemini',
+                    'extraction_model' => $extraction_model,
+                    'generative_model' => $generative_model
+                ]);
+
+                // Phase 4: Complete
+                $this->send_sse_event([
+                    'phase' => 'complete',
+                    'message' => 'Done!',
+                    'data' => [
+                        'query' => $search_query,
+                        'results' => $search_results,
+                        'summary' => $summary
+                    ]
+                ]);
+
+            } catch (Exception $e) {
+                $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
+                treyworks_log(__('Search error: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
+                    'exception' => get_class($e),
+                    'referer' => $referer,
+                    'llm_provider' => 'gemini'
+                ]);
+                
+                $this->send_sse_event([
+                    'phase' => 'error',
+                    'message' => 'Error processing search request: ' . $e->getMessage()
+                ]);
+            }
+            
+            exit;
+        }
+
          // Function to handle search requests
         public function get_search_results($request) {
             
@@ -350,12 +556,9 @@ if (!class_exists('QuickSearchSummarizer')) {
             if (!$this->verify_request_server()) {
                 return new WP_Error('no_crossorigin', __('Cross Origin access forbidden'), ['status' => 403]);
             }
-
-            // Get settings
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
             
             // Get custom prompt or use default
-            $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
+            $summary_prompt = $this->get_summary_prompt();
 
             try {
                 // Get request parameters
@@ -367,10 +570,10 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
 
                 // Extract search term
-                $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+                $extract_search_term_prompt = QSS_Default_Prompts::EXTRACT_SEARCH_TERM;
                 
                 // Get prompt result
-                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
 
                 // Perform WordPress search
                 $post_ids = null;
@@ -385,11 +588,11 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Create summary of search results
-                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query, $llm_provider);
+                $summary = $this->process_search_results($summary_prompt, $search_results, $search_query);
 
                 // Get model information for logging
-                $extraction_model = $this->settings->get_llm_model($llm_provider, 'extraction');
-                $generative_model = $this->settings->get_llm_model($llm_provider, 'generative');
+                $extraction_model = $this->settings->get_llm_model('extraction');
+                $generative_model = $this->settings->get_llm_model('generative');
 
                 // Log search results with referer URL and model info
                 $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
@@ -397,7 +600,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     'extracted_search_term' => $extracted_search_term, 
                     'summary' => $summary,
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider,
+                    'llm_provider' => 'gemini',
                     'extraction_model' => $extraction_model,
                     'generative_model' => $generative_model
                 ]);
@@ -414,7 +617,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 treyworks_log(__('Search error: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
                     'exception' => get_class($e),
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider
+                    'llm_provider' => 'gemini'
                 ]);
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }
@@ -449,9 +652,6 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
             }
 
-            // Get settings
-            $llm_provider = get_option('qss_plugin_llm_provider', 'openai');
-
             try {
                 // Get request parameters
                 $params = $request->get_json_params();
@@ -472,19 +672,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
 
                 // Validate search query
-                if (empty($search_query)) {
-                    return new WP_Error('invalid_request', 'Search query is required', ['status' => 400]);
-                }
-
-                // Extract search term
-                // Get custom extract search term prompt or use default
-                $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
-                
-                // Get custom get answer prompt or use default
-                $answer_prompt = get_option('qss_plugin_get_answer_prompt', QSS_Default_Prompts::GET_ANSWER);
-
-                // Get Extracted Search Term prompt result
-                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query, $llm_provider);
+                $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
 
                 // Get post IDs from request
                 $post_ids = null;
@@ -500,11 +688,11 @@ if (!class_exists('QuickSearchSummarizer')) {
                 $search_results = $this->search_site($extracted_search_term, $post_ids);
 
                 // Get answer
-                $answer = $this->process_search_results($answer_prompt, $search_results, $search_query, $llm_provider);
+                $answer = $this->process_search_results($answer_prompt, $search_results, $search_query);
                 
                 // Get model information for logging
-                $extraction_model = $this->settings->get_llm_model($llm_provider, 'extraction');
-                $generative_model = $this->settings->get_llm_model($llm_provider, 'generative');
+                $extraction_model = $this->settings->get_llm_model('extraction');
+                $generative_model = $this->settings->get_llm_model('generative');
                 
                 // Log search results with referer URL and model info
                 $referer = $request->get_header('referer') ? $request->get_header('referer') : 'unknown';
@@ -512,7 +700,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                     'answer' => $answer, 
                     'extracted_search_term' => $extracted_search_term,
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider,
+                    'llm_provider' => 'gemini',
                     'extraction_model' => $extraction_model,
                     'generative_model' => $generative_model
                 ]);
@@ -525,7 +713,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 treyworks_log(__('Error getting answer: ' . $e->getMessage()), TREYWORKS_LOG_ERROR, [
                     'exception' => get_class($e),
                     'referer' => $referer,
-                    'llm_provider' => $llm_provider
+                    'llm_provider' => 'gemini'
                 ]);
                 return new WP_Error('api_error', 'Error processing search request: ' . $e->getMessage(), ['status' => 500]);
             }

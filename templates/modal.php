@@ -56,21 +56,32 @@ $common_questions = get_option('qss_plugin_common_questions', '');
         </div>
 
         <div id="qss-loading" class="qss-loading" style="display: none;">
-        <div class="qss-loader"></div>
-            <?php echo esc_html__('Searching...', 'treyworks-search'); ?>
+            <div class="qss-loader"></div>
+            <div class="qss-loading-phases">
+                <div class="qss-phase-indicator" data-phase="extracting">
+                    <span class="qss-phase-dot"></span>
+                    <span class="qss-phase-label"><?php echo esc_html__('Analyzing your question...', 'treyworks-search'); ?></span>
+                </div>
+                <div class="qss-phase-indicator" data-phase="searching">
+                    <span class="qss-phase-dot"></span>
+                    <span class="qss-phase-label"><?php echo esc_html__('Searching the site...', 'treyworks-search'); ?></span>
+                </div>
+                <div class="qss-phase-indicator" data-phase="summarizing">
+                    <span class="qss-phase-dot"></span>
+                    <span class="qss-phase-label"><?php echo esc_html__('Crafting your answer...', 'treyworks-search'); ?></span>
+                </div>
+            </div>
         </div>
 
         <div id="qss-search-results" class="qss-search-results" style="display: none;">
             <div id="qss-summary" class="qss-summary"></div>
             
             <div class="qss-sources-wrapper">
-                <button class="qss-sources-toggle" aria-expanded="false">
-                    <span><?php echo esc_html__('View all search results', 'treyworks-search'); ?></span>
-                    <svg class="qss-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                    </svg>
-                </button>
-                <div id="qss-sources-list" class="qss-sources-list" style="display: none;"></div>
+                <div class="qss-sources-header">
+                    <h3 class="qss-sources-title"><?php echo esc_html__('Top matching pages', 'treyworks-search'); ?></h3>
+                    <span id="qss-sources-count" class="qss-sources-count"></span>
+                </div>
+                <div id="qss-sources-list" class="qss-sources-list"></div>
             </div>
         </div>
     </div>

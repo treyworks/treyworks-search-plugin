@@ -100,6 +100,7 @@ class QSS_Core {
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('wp_rest'),
                 'rest_url' => esc_url_raw(rest_url('treyworks-search/v1/search')),
+                'stream_url' => esc_url_raw(rest_url('treyworks-search/v1/search-stream')),
                 'get_answer_url' => esc_url_raw(rest_url('treyworks-search/v1/get_answer'))
             )
         );
