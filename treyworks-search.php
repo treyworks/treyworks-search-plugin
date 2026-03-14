@@ -3,7 +3,7 @@
  * Plugin Name: Treyworks Search for WordPress
  * Plugin URI: https://treyworks.com/ai-search-plugin/
  * Description: A WordPress plugin for quick search and summarization using AI
- * Version: 1.4.0
+ * Version: 1.4.1
  * Author: Treyworks LLC
  * Author URI: https://treyworks.com
  * License: GPL v2 or later
@@ -92,7 +92,7 @@ if (!class_exists('QuickSearchSummarizer')) {
         }
 
         private function define_constants() {
-            define('PLUGIN_VERSION', '1.4.0');
+            define('PLUGIN_VERSION', '1.4.1');
             define('PLUGIN_DIR', plugin_dir_path(__FILE__));
             define('PLUGIN_URL', plugin_dir_url(__FILE__));
         }
@@ -146,76 +146,164 @@ if (!class_exists('QuickSearchSummarizer')) {
             $max_results = get_option('qss_plugin_max_search_results', 3);
             
             // Split search term by comma to handle multiple extracted terms
-            $search_terms = array_map('trim', explode(',', $search_term));
-            $all_results = array();
-            $seen_post_ids = array();
-            
-            // Loop through each extracted term
-            foreach ($search_terms as $term) {
-                if (empty($term)) {
-                    continue;
-                }
-                
-                // Search query arguments
+            $search_terms = array_values(array_filter(array_map('trim', explode(',', $search_term))));
+            if (empty($search_terms) && !empty($search_term)) {
+                $search_terms = array(trim($search_term));
+            }
+
+            $ranked_results = array();
+            $candidate_limit = max($max_results * 3, $max_results);
+
+            if (!empty($post_ids) && is_array($post_ids)) {
+                $post_ids = array_map('intval', $post_ids);
                 $args = array(
-                    's' => $term,
                     'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
                     'post_status' => 'publish',
-                    'posts_per_page' => $max_results,
+                    'posts_per_page' => -1,
+                    'post__in' => $post_ids,
+                    'orderby' => 'post__in',
                 );
 
-                // If specific post IDs are provided, add them to the query
-                if (!empty($post_ids) && is_array($post_ids)) {
-                    // Ensure IDs are integers
-                    $post_ids = array_map('intval', $post_ids);
-                    $args['post__in'] = $post_ids;
-                    unset($args['s']); 
-                }
-
-                // Perform the search
                 $search_query = new WP_Query($args);
 
-                // Get search results
                 if ($search_query->have_posts()) {
                     while ($search_query->have_posts()) {
                         $search_query->the_post();
                         $post_id = get_the_ID();
-                        
-                        // Skip if we've already added this post
-                        if (in_array($post_id, $seen_post_ids)) {
-                            continue;
-                        }
-                        
-                        // Get post content
+                        $title = get_the_title();
                         $content = wp_strip_all_tags(get_the_content());
-                        
-                        // Allow plugins to modify the content (e.g., add custom fields)
                         $content = apply_filters('qss_pre_ai_content', $content, $post_id);
-                        
-                        $all_results[] = array(
-                            'title' => get_the_title(),
+
+                        $ranked_results[$post_id] = array(
+                            'title' => $title,
                             'content' => $content,
                             'permalink' => get_permalink(),
                             'post_id' => $post_id,
-                            'relevance_score' => $search_query->current_post + 1
+                            'match_count' => 0,
+                            'title_match_count' => 0,
+                            'exact_title_match_count' => 0,
+                            'best_position' => PHP_INT_MAX,
+                            'position_total' => 0,
                         );
-                        
-                        $seen_post_ids[] = $post_id;
+
+                        foreach ($search_terms as $term_index => $term) {
+                            $term_lower = function_exists('mb_strtolower') ? mb_strtolower($term) : strtolower($term);
+                            $title_lower = function_exists('mb_strtolower') ? mb_strtolower($title) : strtolower($title);
+                            $content_lower = function_exists('mb_strtolower') ? mb_strtolower($content) : strtolower($content);
+
+                            $title_match = false !== strpos($title_lower, $term_lower);
+                            $content_match = false !== strpos($content_lower, $term_lower);
+
+                            if ($title_match || $content_match) {
+                                $ranked_results[$post_id]['match_count']++;
+                                $ranked_results[$post_id]['best_position'] = min($ranked_results[$post_id]['best_position'], $term_index + 1);
+                                $ranked_results[$post_id]['position_total'] += $term_index + 1;
+
+                                if ($title_match) {
+                                    $ranked_results[$post_id]['title_match_count']++;
+                                }
+
+                                if ($title_lower === $term_lower) {
+                                    $ranked_results[$post_id]['exact_title_match_count']++;
+                                }
+                            }
+                        }
                     }
                 }
 
                 wp_reset_postdata();
+            } else {
+                foreach ($search_terms as $term) {
+                    if (empty($term)) {
+                        continue;
+                    }
+
+                    $args = array(
+                        's' => $term,
+                        'post_type' => get_option('qss_plugin_searchable_post_types', array('post', 'page')),
+                        'post_status' => 'publish',
+                        'posts_per_page' => $candidate_limit,
+                    );
+
+                    $search_query = new WP_Query($args);
+
+                    if ($search_query->have_posts()) {
+                        while ($search_query->have_posts()) {
+                            $search_query->the_post();
+                            $post_id = get_the_ID();
+                            $title = get_the_title();
+                            $content = wp_strip_all_tags(get_the_content());
+                            $content = apply_filters('qss_pre_ai_content', $content, $post_id);
+
+                            if (!isset($ranked_results[$post_id])) {
+                                $ranked_results[$post_id] = array(
+                                    'title' => $title,
+                                    'content' => $content,
+                                    'permalink' => get_permalink(),
+                                    'post_id' => $post_id,
+                                    'match_count' => 0,
+                                    'title_match_count' => 0,
+                                    'exact_title_match_count' => 0,
+                                    'best_position' => PHP_INT_MAX,
+                                    'position_total' => 0,
+                                );
+                            }
+
+                            $position = $search_query->current_post + 1;
+                            $term_lower = function_exists('mb_strtolower') ? mb_strtolower($term) : strtolower($term);
+                            $title_lower = function_exists('mb_strtolower') ? mb_strtolower($title) : strtolower($title);
+
+                            $ranked_results[$post_id]['match_count']++;
+                            $ranked_results[$post_id]['best_position'] = min($ranked_results[$post_id]['best_position'], $position);
+                            $ranked_results[$post_id]['position_total'] += $position;
+
+                            if (false !== strpos($title_lower, $term_lower)) {
+                                $ranked_results[$post_id]['title_match_count']++;
+                            }
+
+                            if ($title_lower === $term_lower) {
+                                $ranked_results[$post_id]['exact_title_match_count']++;
+                            }
+                        }
+                    }
+
+                    wp_reset_postdata();
+                }
             }
-            
-            // Rank results by relevance score (lower is better)
+
+            $all_results = array_values($ranked_results);
+
             usort($all_results, function($a, $b) {
-                return $a['relevance_score'] - $b['relevance_score'];
+                if ($a['exact_title_match_count'] !== $b['exact_title_match_count']) {
+                    return $b['exact_title_match_count'] <=> $a['exact_title_match_count'];
+                }
+
+                if ($a['title_match_count'] !== $b['title_match_count']) {
+                    return $b['title_match_count'] <=> $a['title_match_count'];
+                }
+
+                if ($a['match_count'] !== $b['match_count']) {
+                    return $b['match_count'] <=> $a['match_count'];
+                }
+
+                if ($a['best_position'] !== $b['best_position']) {
+                    return $a['best_position'] <=> $b['best_position'];
+                }
+
+                if ($a['position_total'] !== $b['position_total']) {
+                    return $a['position_total'] <=> $b['position_total'];
+                }
+
+                return strcasecmp($a['title'], $b['title']);
             });
-            
-            // Limit to max results and remove scoring metadata
+
             $final_results = array_slice($all_results, 0, $max_results);
             foreach ($final_results as &$result) {
-                unset($result['relevance_score']);
+                unset($result['match_count']);
+                unset($result['title_match_count']);
+                unset($result['exact_title_match_count']);
+                unset($result['best_position']);
+                unset($result['position_total']);
                 unset($result['post_id']);
             }
             
@@ -303,6 +391,17 @@ if (!class_exists('QuickSearchSummarizer')) {
             }
         }
 
+        private function get_summary_prompt() {
+            $tone_branding_prompt = get_option('qss_plugin_create_summary_prompt', '');
+            $tone_branding_prompt = is_string($tone_branding_prompt) ? trim($tone_branding_prompt) : '';
+
+            if ($tone_branding_prompt === '') {
+                $tone_branding_prompt = QSS_Default_Prompts::CREATE_SUMMARY_TONE_BRANDING;
+            }
+
+            return QSS_Default_Prompts::CREATE_SUMMARY_SYSTEM . "\n\nTone and branding instructions:\n" . $tone_branding_prompt;
+        }
+
         public function register_rest_api_routes() {
             // Register search route
             register_rest_route('treyworks-search/v1', '/search', [
@@ -364,8 +463,8 @@ if (!class_exists('QuickSearchSummarizer')) {
             }
 
             // Get custom prompts or use defaults
-            $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
-            $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+            $summary_prompt = $this->get_summary_prompt();
+            $extract_search_term_prompt = QSS_Default_Prompts::EXTRACT_SEARCH_TERM;
 
             try {
                 // Get search query from URL parameter
@@ -459,7 +558,7 @@ if (!class_exists('QuickSearchSummarizer')) {
             }
             
             // Get custom prompt or use default
-            $summary_prompt = get_option('qss_plugin_create_summary_prompt', QSS_Default_Prompts::CREATE_SUMMARY);
+            $summary_prompt = $this->get_summary_prompt();
 
             try {
                 // Get request parameters
@@ -471,7 +570,7 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
 
                 // Extract search term
-                $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
+                $extract_search_term_prompt = QSS_Default_Prompts::EXTRACT_SEARCH_TERM;
                 
                 // Get prompt result
                 $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
@@ -573,18 +672,6 @@ if (!class_exists('QuickSearchSummarizer')) {
                 }
 
                 // Validate search query
-                if (empty($search_query)) {
-                    return new WP_Error('invalid_request', 'Search query is required', ['status' => 400]);
-                }
-
-                // Extract search term
-                // Get custom extract search term prompt or use default
-                $extract_search_term_prompt = get_option('qss_plugin_extract_search_term_prompt', QSS_Default_Prompts::EXTRACT_SEARCH_TERM);
-                
-                // Get custom get answer prompt or use default
-                $answer_prompt = get_option('qss_plugin_get_answer_prompt', QSS_Default_Prompts::GET_ANSWER);
-
-                // Get Extracted Search Term prompt result
                 $extracted_search_term = $this->get_prompt_result($extract_search_term_prompt, $search_query);
 
                 // Get post IDs from request

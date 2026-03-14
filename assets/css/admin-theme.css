@@ -148,6 +148,89 @@
     max-width: 1200px;
 }
 
+.qss-view-system-prompt {
+    margin-left: 8px;
+    font-weight: 600;
+}
+
+.qss-system-prompt-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.qss-admin-modal[hidden] {
+    display: none;
+}
+
+.qss-admin-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+}
+
+.qss-admin-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 34, 54, 0.6);
+}
+
+.qss-admin-modal__dialog {
+    position: relative;
+    width: min(900px, calc(100vw - 48px));
+    max-height: calc(100vh - 80px);
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+}
+
+.qss-admin-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.qss-admin-modal__header h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.qss-admin-modal__close {
+    font-size: 28px;
+    line-height: 1;
+    text-decoration: none;
+    color: var(--tw-blue);
+}
+
+.qss-admin-modal__body {
+    padding: 24px;
+    overflow: auto;
+    max-height: calc(100vh - 180px);
+}
+
+.qss-admin-modal__body pre {
+    margin: 0;
+    padding: 20px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tw-blue-dark);
+}
+
+body.qss-admin-modal-open {
+    overflow: hidden;
+}
+
 /* Form Styles */
 .treyworks-admin input[type="text"],
 .treyworks-admin input[type="password"],

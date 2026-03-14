@@ -186,29 +186,20 @@ class QSS_Plugin_Settings {
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => ''
             ),
-            'extract_search_term_prompt' => array(
-                'label' => __('Extract Search Term Prompt', 'qss-plugin'),
+            'create_summary_prompt' => array(
+                'label' => __('Search Tone + Branding', 'qss-plugin'),
                 'type' => 'textarea',
                 'rows' => 8,
-                'description' => __('System prompt for extracting search terms from user queries.', 'qss-plugin'),
+                'description' => __('Optional tone and brand voice instructions for search summaries. Example: "Write in Treyworks’ voice: clear, strategic, friendly, and concise." Leave blank to use the built-in default tone and branding instructions.', 'qss-plugin'),
                 'sanitize_callback' => 'sanitize_textarea_field',
-                'default' => QSS_Default_Prompts::EXTRACT_SEARCH_TERM
+                'default' => QSS_Default_Prompts::CREATE_SUMMARY_TONE_BRANDING
             ),
-            'create_summary_prompt' => array(
-                'label' => __('Create Summary Prompt', 'qss-plugin'),
-                'type' => 'textarea',
-                'rows' => 15,
-                'description' => __('System prompt for creating summaries of search results.', 'qss-plugin'),
-                'sanitize_callback' => 'sanitize_textarea_field',
-                'default' => QSS_Default_Prompts::CREATE_SUMMARY
-            ),
-            'get_answer_prompt' => array(
-                'label' => __('Answer Prompt', 'qss-plugin'),
-                'type' => 'textarea',
-                'rows' => 15,
-                'description' => __('System prompt for generating answers to user questions based on search results.', 'qss-plugin'),
-                'sanitize_callback' => 'sanitize_textarea_field',
-                'default' => QSS_Default_Prompts::GET_ANSWER
+            'system_prompt_links_display' => array(
+                'label' => __('Built-in System Prompts', 'qss-plugin'),
+                'type' => 'custom',
+                'description' => __('View the built-in prompt constants used by the plugin.', 'qss-plugin'),
+                'sanitize_callback' => null,
+                'default' => ''
             ),
             'enable_trusted_domains' => array(
                 'label' => __('Enable Trusted Domains', 'qss-plugin'),
@@ -320,7 +311,7 @@ class QSS_Plugin_Settings {
         add_settings_section(
             'qss_plugin_prompts_section',
             __('System Prompts', 'qss-plugin'),
-            function() { echo '<p>' . __('Customize system prompts for search and summarization.', 'qss-plugin') . '</p>'; },
+            function() { echo '<p>' . __('Search uses built-in system prompt constants. You can adjust summary tone and branding below, and view all built-in prompts from this section.', 'qss-plugin') . '</p>'; },
             'qss-plugin-settings'
         );
         
@@ -341,7 +332,7 @@ class QSS_Plugin_Settings {
                 $section = 'qss_plugin_search_section';
             } elseif (in_array($key, ['integration_token', 'gemini_api_key', 'gemini_extraction_model', 'gemini_generative_model'])) {
                 $section = 'qss_plugin_api_section';
-            } elseif (in_array($key, ['extract_search_term_prompt', 'create_summary_prompt', 'get_answer_prompt'])) {
+            } elseif (in_array($key, ['create_summary_prompt', 'system_prompt_links_display'])) {
                 $section = 'qss_plugin_prompts_section';
             } elseif (in_array($key, ['enable_trusted_domains', 'trusted_domains', 'api_endpoints_display'])) {
                 $section = 'qss_plugin_rest_api_section';
@@ -374,7 +365,7 @@ class QSS_Plugin_Settings {
      * Prompts section callback
      */
     public function prompts_section_callback() {
-        echo '<p>' . __('Configure the system prompts used for AI operations. Leave blank to use defaults.', 'qss-plugin') . '</p>';
+        echo '<p>' . __('Search uses built-in system prompt constants. For summaries, only enter tone and branding guidance; the plugin provides the system prompt automatically. Use the links below to review the built-in prompts.', 'qss-plugin') . '</p>';
     }
 
     /**
@@ -499,6 +490,8 @@ class QSS_Plugin_Settings {
             case 'custom':
                 if ($key === 'api_endpoints_display') {
                     $this->render_api_endpoints();
+                } elseif ($key === 'system_prompt_links_display') {
+                    $this->render_system_prompt_links();
                 }
                 break;
             
@@ -517,7 +510,11 @@ class QSS_Plugin_Settings {
         }
         
         if (!empty($field['description']) && strpos($field['description'], '<div class="password-field">') === false) {
-            printf('<p class="description">%s</p>', esc_html($field['description']));
+            if ($key === 'create_summary_prompt') {
+                printf('<p class="description">%s</p>', wp_kses_post($field['description']));
+            } else {
+                printf('<p class="description">%s</p>', esc_html($field['description']));
+            }
         }
 
         if (!empty($field['condition'])) {
@@ -577,6 +574,22 @@ class QSS_Plugin_Settings {
         <?php
     }
     
+    private function render_system_prompt_links() {
+        ?>
+        <div class="qss-system-prompt-links">
+            <button type="button" class="button button-secondary qss-view-system-prompt" data-qss-modal-target="qss-extract-system-prompt-modal">
+                <?php _e('View Extraction Prompt', 'qss-plugin'); ?>
+            </button>
+            <button type="button" class="button button-secondary qss-view-system-prompt" data-qss-modal-target="qss-summary-system-prompt-modal">
+                <?php _e('View Search Summary System Prompt', 'qss-plugin'); ?>
+            </button>
+            <button type="button" class="button button-secondary qss-view-system-prompt" data-qss-modal-target="qss-answer-system-prompt-modal">
+                <?php _e('View Answer Prompt', 'qss-plugin'); ?>
+            </button>
+        </div>
+        <?php
+    }
+
     /**
      * Render options page
      */

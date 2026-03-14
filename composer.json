@@ -2,7 +2,7 @@
     "name": "treyworks-search/wordpress-plugin",
     "description": "A WordPress plugin with AI-powered search capabilities",
     "type": "wordpress-plugin",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "require": {
         "php": ">=7.4",
         "php-http/guzzle7-adapter": "^1.0",

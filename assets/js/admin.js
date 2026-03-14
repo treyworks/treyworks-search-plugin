@@ -87,4 +87,31 @@ jQuery(document).ready(function($) {
             });
         }, 5000);
     });
+
+    $('.qss-view-system-prompt').on('click', function() {
+        const target = $(this).data('qss-modal-target');
+        const $modal = $('#' + target);
+
+        if ($modal.length) {
+            $modal.removeAttr('hidden').addClass('is-open');
+            $('body').addClass('qss-admin-modal-open');
+        }
+    });
+
+    $('[data-qss-modal-close]').on('click', function() {
+        const target = $(this).data('qss-modal-close');
+        const $modal = $('#' + target);
+
+        if ($modal.length) {
+            $modal.attr('hidden', true).removeClass('is-open');
+            $('body').removeClass('qss-admin-modal-open');
+        }
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            $('.qss-admin-modal.is-open').attr('hidden', true).removeClass('is-open');
+            $('body').removeClass('qss-admin-modal-open');
+        }
+    });
 });

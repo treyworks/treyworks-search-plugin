@@ -6,6 +6,7 @@ jQuery(document).ready(function($) {
     const searchResults = $('#qss-search-results');
     const summaryContainer = $('#qss-summary');
     const sourcesList = $('#qss-sources-list');
+    const sourcesCount = $('#qss-sources-count');
     const loadingIndicator = $('#qss-loading');
     const modal = $('#qss-modal');
     const closeModal = $('.qss-close-modal');
@@ -168,27 +169,6 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Handle sources toggle
-    $(document).on('click', '.qss-sources-toggle', function() {
-        const isExpanded = $(this).attr('aria-expanded') === 'true';
-        $(this).attr('aria-expanded', !isExpanded);
-        
-        const sourcesList = $('#qss-sources-list');
-        sourcesList.slideToggle(200, function() {
-            if (!isExpanded) {
-                const modalContent = $('.qss-modal-content');
-                const sourcesTop = sourcesList.offset().top;
-                const modalScrollTop = modalContent.scrollTop();
-                const modalTop = modalContent.offset().top;
-                const scrollTo = modalScrollTop + (sourcesTop - modalTop) - 100; // 100px offset for better visibility
-                
-                modalContent.animate({
-                    scrollTop: scrollTo
-                }, 300);
-            }
-        });
-    });
-
     function updateLoadingMessage(message) {
         // Update phase indicators - remove active from all, then add to current
         $('.qss-phase-indicator').removeClass('active');
@@ -216,20 +196,23 @@ jQuery(document).ready(function($) {
 
         // Display results and collect sources
         if (data.results && data.results.length > 0) {
+            sourcesCount.text(`${data.results.length} result${data.results.length === 1 ? '' : 's'}`);
             for (let i = 0; i < data.results.length; i++) {
                 const result = data.results[i];
                 const truncatedContent = truncateText(stripHtml(result.content), 200);
-                const parsedContent = marked.parse(truncatedContent);
-                
-                // Add to sources list
+
                 sourcesList.append(`
                     <div class="qss-source-item">
                         <span class="qss-source-number">${i + 1}</span>
-                        <a href="${result.permalink}" target="_blank">${result.title}</a>
+                        <div class="qss-source-content">
+                            <a href="${result.permalink}" target="_blank" rel="noopener noreferrer">${result.title}</a>
+                            <p class="qss-source-excerpt">${escapeHtml(truncatedContent)}</p>
+                        </div>
                     </div>
                 `);
             }
         } else {
+            sourcesCount.text('');
             // No results found
             summaryContainer.html('<div class="qss-no-results">No results found. Please try a different search query.</div>');
         }
@@ -276,8 +259,8 @@ jQuery(document).ready(function($) {
         loadingIndicator.show();
         searchResults.hide();
         summaryContainer.empty();
-        sourcesList.empty().hide();
-        $('.qss-sources-toggle').attr('aria-expanded', 'false');
+        sourcesList.empty();
+        sourcesCount.text('');
         updateLoadingMessage('Initializing...');
 
         // Check if EventSource is supported
@@ -423,5 +406,9 @@ jQuery(document).ready(function($) {
     // Helper function to truncate text
     function truncateText(text, maxLength) {
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    function escapeHtml(text) {
+        return $('<div>').text(text).html();
     }
 });
